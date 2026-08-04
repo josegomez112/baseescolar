@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel del Alumno</title>
+    <meta
+      name="description"
+      content="Panel principal del alumno para el Sistema de Gestión Escolar"
+    />
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="js/alumno.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Sistema de Gestión Escolar</h1>
+    </header>
+
+    <div>
+      <aside>
+        <nav aria-label="Menú principal del alumno">
+          <ul>
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Mis Materias</a></li>
+            <li><a href="#">Mis Notas</a></li>
+            <li><a href="#">Mis Asistencias</a></li>
+            <li><a href="#">Mi Perfil</a></li>
+            <li><a href="#">Cerrar sesión</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main>
+        <section>
+          <h2>Bienvenido/a, Alumno</h2>
+          <p>Esta es tu vista principal del sistema escolar.</p>
+        </section>
+
+        <section aria-label="Resumen del alumno">
+          <article>
+            <h3>Cantidad de materias</h3>
+            <p>6</p>
+          </article>
+
+          <article>
+            <h3>Promedio general</h3>
+            <p>8.7</p>
+          </article>
+
+          <article>
+            <h3>Porcentaje de asistencia</h3>
+            <p>94%</p>
+          </article>
+
+          <article>
+            <h3>Estado académico</h3>
+            <p>Regular</p>
+          </article>
+        </section>
+
+        <section>
+          <h3>Mis Materias</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Docente</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Matemática</td>
+                <td>Prof. García</td>
+                <td>En curso</td>
+              </tr>
+              <tr>
+                <td>Historia</td>
+                <td>Prof. López</td>
+                <td>Regular</td>
+              </tr>
+              <tr>
+                <td>Lengua</td>
+                <td>Prof. Romero</td>
+                <td>En curso</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>Mis Notas</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Nota</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Matemática</td>
+                <td>9</td>
+                <td>2026-08-01</td>
+              </tr>
+              <tr>
+                <td>Historia</td>
+                <td>8</td>
+                <td>2026-07-28</td>
+              </tr>
+              <tr>
+                <td>Lengua</td>
+                <td>9.5</td>
+                <td>2026-07-25</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>Mis Asistencias</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-01</td>
+                <td>Presente</td>
+              </tr>
+              <tr>
+                <td>2026-07-30</td>
+                <td>Ausente</td>
+              </tr>
+              <tr>
+                <td>2026-07-29</td>
+                <td>Presente</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>Mi Perfil</h3>
+          <dl>
+            <div>
+              <dt>DNI</dt>
+              <dd>40123456</dd>
+            </div>
+            <div>
+              <dt>Nombre</dt>
+              <dd>Juan</dd>
+            </div>
+            <div>
+              <dt>Apellido</dt>
+              <dd>Pérez</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <footer>
+      <p>Proyecto Sistema de Gestión Escolar</p>
+    </footer>
+  </body>
+</html>
