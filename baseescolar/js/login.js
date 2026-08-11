@@ -1,3 +1,7 @@
+
+import { supabase } from './supabase.js';
+console.log("login.js arrancó");
+
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
   const errorMessage = document.getElementById('login-error');
@@ -23,9 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.style.display = 'none';
   };
 
-  loginForm.addEventListener('submit', (event) => {
+  loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    // Se obtienen los valores del formulario.
     const usuario = document.getElementById('usuario')?.value.trim() || '';
     const password = document.getElementById('password')?.value.trim() || '';
     const rol = document.getElementById('rol')?.value.trim() || '';
@@ -38,8 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Validación de acceso: por ahora solo se valida que los campos existan.
-    // Cuando se conecte con Supabase, aquí se reemplazará por la consulta de autenticación.
+    // Verifica que el rol seleccionado exista en el mapeo.
     const targetPage = rolePages[rol];
 
     if (!targetPage) {
@@ -47,7 +51,32 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Redirección según el rol.
-    window.location.href = targetPage;
+    try {
+      // Consulta la tabla de usuarios con los tres filtros solicitados.
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('usuario', usuario)
+        .eq('password', password)
+        .eq('rol', rol)
+        .maybeSingle();
+
+      // Maneja errores de conexión o de consulta.
+      if (error) {
+        throw error;
+      }
+
+      // Si no existe el usuario, muestra el mensaje requerido.
+      if (!data) {
+        showError('Usuario o contraseña incorrectos.');
+        return;
+      }
+
+      // Si el usuario existe, redirige según el rol.
+      window.location.href = targetPage;
+    } catch (error) {
+      console.error('Error al iniciar sesión con Supabase:', error);
+      showError('Error de conexión. Inténtelo nuevamente.');
+    }
   });
 });

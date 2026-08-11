@@ -1,47 +1,12 @@
-// Datos simulados para el panel administrativo.
-// Se reemplazarán por consultas reales a Supabase cuando se conecte la base de datos.
-const adminData = {
-  usuarios: [
-    { nombre: 'Juan', apellido: 'Pérez', email: 'juan@escuela.com', rol: 'alumno' },
-    { nombre: 'María', apellido: 'García', email: 'maria@escuela.com', rol: 'docente' },
-    { nombre: 'Laura', apellido: 'Ramírez', email: 'laura@escuela.com', rol: 'preceptor' },
-    { nombre: 'Lic. Torres', apellido: 'Admin', email: 'admin@escuela.com', rol: 'administrador' }
-  ],
-  alumnos: [
-    { dni: '40123456', nombre: 'Juan', apellido: 'Pérez', curso: '5° A' },
-    { dni: '40234567', nombre: 'María', apellido: 'Gómez', curso: '6° B' },
-    { dni: '40345678', nombre: 'Luis', apellido: 'Fernández', curso: '7° A' }
-  ],
-  docentes: [
-    { dni: '30123456', nombre: 'María', apellido: 'García', especialidad: 'Matemática' },
-    { dni: '30234567', nombre: 'Pedro', apellido: 'López', especialidad: 'Historia' },
-    { dni: '30345678', nombre: 'Ana', apellido: 'Romero', especialidad: 'Lengua' }
-  ],
-  preceptores: [
-    { dni: '20012345', nombre: 'Laura', apellido: 'Ramírez', curso: '5° A' },
-    { dni: '20023456', nombre: 'Carlos', apellido: 'Sosa', curso: '6° B' }
-  ],
-  materias: [
-    { id: 1, nombre: 'Matemática', curso: '5° A', docente: 'María García' },
-    { id: 2, nombre: 'Historia', curso: '4° B', docente: 'Pedro López' },
-    { id: 3, nombre: 'Lengua', curso: '6° A', docente: 'Ana Romero' }
-  ]
-};
+```javascript
+import { supabase } from './supabase.js';
 
-// Función auxiliar para crear filas de tabla.
-function crearFilaTabla(celdas) {
-  const fila = document.createElement('tr');
+console.log('administrador.js conectado a Supabase');
 
-  celdas.forEach((valor) => {
-    const celda = document.createElement('td');
-    celda.textContent = valor;
-    fila.appendChild(celda);
-  });
+// =====================================================
+// MENSAJES
+// =====================================================
 
-  return fila;
-}
-
-// Función reutilizable para mostrar mensajes dentro de la interfaz.
 function mostrarMensaje(mensaje, tipo = 'success') {
   const existing = document.querySelector('#admin-message');
 
@@ -50,6 +15,7 @@ function mostrarMensaje(mensaje, tipo = 'success') {
   }
 
   const box = document.createElement('p');
+
   box.id = 'admin-message';
   box.textContent = mensaje;
   box.style.marginTop = '12px';
@@ -72,29 +38,106 @@ function mostrarMensaje(mensaje, tipo = 'success') {
   }
 }
 
-// ----- Carga usuarios -----
-function cargarUsuarios() {
-  const tbody = document.querySelector('#usuarios-table tbody');
+// =====================================================
+// CREAR FILA DE TABLA
+// =====================================================
 
-  if (!tbody) {
-    return;
-  }
+function crearFilaTabla(celdas) {
+  const fila = document.createElement('tr');
 
-  tbody.innerHTML = '';
+  celdas.forEach((valor) => {
+    const celda = document.createElement('td');
 
-  adminData.usuarios.forEach((usuario) => {
-    const fila = crearFilaTabla([
-      usuario.nombre,
-      usuario.apellido,
-      usuario.email,
-      usuario.rol
-    ]);
-    tbody.appendChild(fila);
+    if (valor === null || valor === undefined) {
+      celda.textContent = '-';
+    } else {
+      celda.textContent = valor;
+    }
+
+    fila.appendChild(celda);
   });
+
+  return fila;
 }
 
-// ----- Carga alumnos -----
-function cargarAlumnos() {
+// =====================================================
+// RESUMEN DEL ADMINISTRADOR
+// =====================================================
+
+async function cargarResumenSupabase() {
+  try {
+    const [
+      resultadoAlumnos,
+      resultadoDocentes,
+      resultadoMaterias,
+      resultadoUsuarios
+    ] = await Promise.all([
+
+      supabase
+        .from('alumno')
+        .select('*', { count: 'exact', head: true }),
+
+      supabase
+        .from('docente')
+        .select('*', { count: 'exact', head: true }),
+
+      supabase
+        .from('materia')
+        .select('*', { count: 'exact', head: true }),
+
+      supabase
+        .from('usuarios')
+        .select('*', { count: 'exact', head: true })
+    ]);
+
+    if (resultadoAlumnos.error) throw resultadoAlumnos.error;
+    if (resultadoDocentes.error) throw resultadoDocentes.error;
+    if (resultadoMaterias.error) throw resultadoMaterias.error;
+    if (resultadoUsuarios.error) throw resultadoUsuarios.error;
+
+    const cardAlumnos = document.querySelector('#card-total-alumnos p');
+    const cardDocentes = document.querySelector('#card-total-docentes p');
+    const cardMaterias = document.querySelector('#card-total-materias p');
+    const cardUsuarios = document.querySelector('#card-total-usuarios p');
+
+    if (cardAlumnos) {
+      cardAlumnos.textContent = resultadoAlumnos.count ?? 0;
+    }
+
+    if (cardDocentes) {
+      cardDocentes.textContent = resultadoDocentes.count ?? 0;
+    }
+
+    if (cardMaterias) {
+      cardMaterias.textContent = resultadoMaterias.count ?? 0;
+    }
+
+    if (cardUsuarios) {
+      cardUsuarios.textContent = resultadoUsuarios.count ?? 0;
+    }
+
+    console.log('Resumen de Supabase:', {
+      alumnos: resultadoAlumnos.count,
+      docentes: resultadoDocentes.count,
+      materias: resultadoMaterias.count,
+      usuarios: resultadoUsuarios.count
+    });
+
+  } catch (error) {
+    console.error('Error cargando resumen:', error);
+
+    mostrarMensaje(
+      'No se pudo cargar el resumen del sistema.',
+      'error'
+    );
+  }
+}
+
+// =====================================================
+// ALUMNOS
+// =====================================================
+
+async function cargarAlumnos() {
   const tbody = document.querySelector('#alumnos-table tbody');
 
   if (!tbody) {
@@ -103,19 +146,37 @@ function cargarAlumnos() {
 
   tbody.innerHTML = '';
 
-  adminData.alumnos.forEach((alumno) => {
+  const { data, error } = await supabase
+    .from('alumno')
+    .select('dni, nombre, apellido')
+    .order('apellido', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando alumnos:', error);
+    mostrarMensaje('Error al cargar los alumnos.', 'error');
+    return;
+  }
+
+  data.forEach((alumno) => {
+
     const fila = crearFilaTabla([
       alumno.dni,
       alumno.nombre,
       alumno.apellido,
-      alumno.curso
+      '-'
     ]);
+
     tbody.appendChild(fila);
   });
+
+  console.log('Alumnos cargados:', data.length);
 }
 
-// ----- Carga docentes -----
-function cargarDocentes() {
+// =====================================================
+// DOCENTES
+// =====================================================
+
+async function cargarDocentes() {
   const tbody = document.querySelector('#docentes-table tbody');
 
   if (!tbody) {
@@ -124,40 +185,76 @@ function cargarDocentes() {
 
   tbody.innerHTML = '';
 
-  adminData.docentes.forEach((docente) => {
+  const { data, error } = await supabase
+    .from('docente')
+    .select('dni, nombre, apellido')
+    .order('apellido', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando docentes:', error);
+    mostrarMensaje('Error al cargar los docentes.', 'error');
+    return;
+  }
+
+  data.forEach((docente) => {
+
     const fila = crearFilaTabla([
       docente.dni,
       docente.nombre,
       docente.apellido,
-      docente.especialidad
+      '-'
     ]);
+
     tbody.appendChild(fila);
   });
+
+  console.log('Docentes cargados:', data.length);
 }
 
-// ----- Carga preceptores -----
-function cargarPreceptores() {
+// =====================================================
+// PRECEPTORES
+// =====================================================
+
+async function cargarPreceptores() {
   const tbody = document.querySelector('#preceptores-table tbody');
 
   if (!tbody) {
+    console.log('No existe tabla de preceptores en este HTML.');
     return;
   }
 
   tbody.innerHTML = '';
 
-  adminData.preceptores.forEach((preceptor) => {
+  const { data, error } = await supabase
+    .from('preceptor')
+    .select('dni, nombre, apellido')
+    .order('apellido', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando preceptores:', error);
+    mostrarMensaje('Error al cargar los preceptores.', 'error');
+    return;
+  }
+
+  data.forEach((preceptor) => {
+
     const fila = crearFilaTabla([
       preceptor.dni,
       preceptor.nombre,
-      preceptor.apellido,
-      preceptor.curso
+      preceptor.apellido
     ]);
+
     tbody.appendChild(fila);
   });
+
+  console.log('Preceptores cargados:', data.length);
 }
 
-// ----- Carga materias -----
-function cargarMaterias() {
+// =====================================================
+// MATERIAS
+// =====================================================
+
+async function cargarMaterias() {
   const tbody = document.querySelector('#materias-table tbody');
 
   if (!tbody) {
@@ -166,255 +263,253 @@ function cargarMaterias() {
 
   tbody.innerHTML = '';
 
-  adminData.materias.forEach((materia) => {
+  const { data, error } = await supabase
+    .from('materia')
+    .select('id, nombre')
+    .order('nombre', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando materias:', error);
+    mostrarMensaje('Error al cargar las materias.', 'error');
+    return;
+  }
+
+  data.forEach((materia) => {
+
     const fila = crearFilaTabla([
-      materia.id,
       materia.nombre,
-      materia.curso,
-      materia.docente
+      '-',
+      '-'
     ]);
+
     tbody.appendChild(fila);
   });
+
+  console.log('Materias cargadas:', data.length);
 }
 
-// Validación simple de campos obligatorios.
-function validarCamposObligatorios(campos) {
-  return campos.every((campo) => {
-    const valor = campo.value.trim();
-    return valor !== '';
+// =====================================================
+// USUARIOS
+// =====================================================
+
+async function cargarUsuarios() {
+
+  const tbody = document.querySelector('#usuarios-table tbody');
+
+  if (!tbody) {
+    console.log('No existe tabla de usuarios en este HTML.');
+    return;
+  }
+
+  tbody.innerHTML = '';
+
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id, usuario, rol, dni')
+    .order('id', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando usuarios:', error);
+    mostrarMensaje('Error al cargar los usuarios.', 'error');
+    return;
+  }
+
+  data.forEach((usuario) => {
+
+    const fila = crearFilaTabla([
+      usuario.usuario,
+      usuario.rol,
+      usuario.dni
+    ]);
+
+    tbody.appendChild(fila);
   });
+
+  console.log('Usuarios cargados:', data.length);
 }
 
-// ----- CRUD Alumnos -----
-function agregarAlumno() {
-  const form = document.querySelector('#form-agregar-alumno');
+// =====================================================
+// NOTAS
+// =====================================================
 
-  if (!form) {
+async function cargarNotas() {
+
+  const tbody = document.querySelector('#notas-table tbody');
+
+  if (!tbody) {
+    console.log('Todavía no existe tabla de notas en el HTML.');
     return;
   }
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
+  tbody.innerHTML = '';
 
-    const dni = document.querySelector('#alumno-dni');
-    const nombre = document.querySelector('#alumno-nombre');
-    const apellido = document.querySelector('#alumno-apellido');
-    const curso = document.querySelector('#alumno-curso');
+  const { data, error } = await supabase
+    .from('notas')
+    .select('id, nota, dni_alumno, dni_docente, id_materia')
+    .order('id', { ascending: true });
 
-    if (!validarCamposObligatorios([dni, nombre, apellido, curso])) {
-      mostrarMensaje('Debe completar todos los campos del alumno.', 'error');
-      return;
-    }
+  if (error) {
+    console.error('Error cargando notas:', error);
+    mostrarMensaje('Error al cargar las notas.', 'error');
+    return;
+  }
 
-    adminData.alumnos.push({
-      dni: dni.value.trim(),
-      nombre: nombre.value.trim(),
-      apellido: apellido.value.trim(),
-      curso: curso.value.trim()
-    });
+  data.forEach((nota) => {
 
-    cargarAlumnos();
-    form.reset();
-    mostrarMensaje('Alumno agregado correctamente.');
+    const fila = crearFilaTabla([
+      nota.id,
+      nota.dni_alumno,
+      nota.dni_docente,
+      nota.id_materia,
+      nota.nota
+    ]);
+
+    tbody.appendChild(fila);
   });
+
+  console.log('Notas cargadas:', data.length);
 }
 
-function editarAlumno() {
-  if (!adminData.alumnos.length) {
-    mostrarMensaje('No hay alumnos para editar.', 'error');
+// =====================================================
+// ASISTENCIAS
+// =====================================================
+
+async function cargarAsistencias() {
+
+  const tbody = document.querySelector('#asistencias-table tbody');
+
+  if (!tbody) {
+    console.log('Todavía no existe tabla de asistencias en el HTML.');
     return;
   }
 
-  const alumno = adminData.alumnos[0];
-  alumno.nombre = 'Alumno';
-  alumno.apellido = 'Modificado';
-  alumno.curso = '8° C';
+  tbody.innerHTML = '';
 
-  cargarAlumnos();
-  mostrarMensaje('Alumno editado correctamente.');
-}
+  const { data, error } = await supabase
+    .from('asistencia')
+    .select('id, fecha, estado, dni_alumno, dni_preceptor')
+    .order('fecha', { ascending: false });
 
-function eliminarAlumno() {
-  if (!adminData.alumnos.length) {
-    mostrarMensaje('No hay alumnos para eliminar.', 'error');
+  if (error) {
+    console.error('Error cargando asistencias:', error);
+    mostrarMensaje(
+      'Error al cargar las asistencias.',
+      'error'
+    );
     return;
   }
 
-  adminData.alumnos.pop();
-  cargarAlumnos();
-  mostrarMensaje('Alumno eliminado correctamente.');
-}
+  data.forEach((asistencia) => {
 
-// ----- CRUD Docentes -----
-function agregarDocente() {
-  const form = document.querySelector('#form-agregar-docente');
+    const fila = crearFilaTabla([
+      asistencia.id,
+      asistencia.fecha,
+      asistencia.dni_alumno,
+      asistencia.estado,
+      asistencia.dni_preceptor
+    ]);
 
-  if (!form) {
-    return;
-  }
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const dni = document.querySelector('#docente-dni');
-    const nombre = document.querySelector('#docente-nombre');
-    const apellido = document.querySelector('#docente-apellido');
-    const especialidad = document.querySelector('#docente-especialidad');
-
-    if (!validarCamposObligatorios([dni, nombre, apellido, especialidad])) {
-      mostrarMensaje('Debe completar todos los campos del docente.', 'error');
-      return;
-    }
-
-    adminData.docentes.push({
-      dni: dni.value.trim(),
-      nombre: nombre.value.trim(),
-      apellido: apellido.value.trim(),
-      especialidad: especialidad.value.trim()
-    });
-
-    cargarDocentes();
-    form.reset();
-    mostrarMensaje('Docente agregado correctamente.');
+    tbody.appendChild(fila);
   });
+
+  console.log('Asistencias cargadas:', data.length);
 }
 
-function editarDocente() {
-  if (!adminData.docentes.length) {
-    mostrarMensaje('No hay docentes para editar.', 'error');
-    return;
-  }
+// =====================================================
+// BIENVENIDA
+// =====================================================
 
-  const docente = adminData.docentes[0];
-  docente.nombre = 'Docente';
-  docente.apellido = 'Editado';
-  docente.especialidad = 'Informática';
-
-  cargarDocentes();
-  mostrarMensaje('Docente editado correctamente.');
-}
-
-function eliminarDocente() {
-  if (!adminData.docentes.length) {
-    mostrarMensaje('No hay docentes para eliminar.', 'error');
-    return;
-  }
-
-  adminData.docentes.pop();
-  cargarDocentes();
-  mostrarMensaje('Docente eliminado correctamente.');
-}
-
-// ----- CRUD Materias -----
-function agregarMateria() {
-  const form = document.querySelector('#form-agregar-materia');
-
-  if (!form) {
-    return;
-  }
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const id = document.querySelector('#materia-id');
-    const nombre = document.querySelector('#materia-nombre');
-    const curso = document.querySelector('#materia-curso');
-    const docente = document.querySelector('#materia-docente');
-
-    if (!validarCamposObligatorios([id, nombre, curso, docente])) {
-      mostrarMensaje('Debe completar todos los campos de la materia.', 'error');
-      return;
-    }
-
-    adminData.materias.push({
-      id: Number(id.value),
-      nombre: nombre.value.trim(),
-      curso: curso.value.trim(),
-      docente: docente.value.trim()
-    });
-
-    cargarMaterias();
-    form.reset();
-    mostrarMensaje('Materia agregada correctamente.');
-  });
-}
-
-function editarMateria() {
-  if (!adminData.materias.length) {
-    mostrarMensaje('No hay materias para editar.', 'error');
-    return;
-  }
-
-  const materia = adminData.materias[0];
-  materia.nombre = 'Materia editada';
-  materia.curso = '9° A';
-
-  cargarMaterias();
-  mostrarMensaje('Materia editada correctamente.');
-}
-
-function eliminarMateria() {
-  if (!adminData.materias.length) {
-    mostrarMensaje('No hay materias para eliminar.', 'error');
-    return;
-  }
-
-  adminData.materias.pop();
-  cargarMaterias();
-  mostrarMensaje('Materia eliminada correctamente.');
-}
-
-// Muestra un mensaje de bienvenida al cargar la página.
 function mostrarBienvenida() {
-  const welcomeTitle = document.querySelector('#welcome-title');
+
+  const welcomeTitle =
+    document.querySelector('#welcome-title') ||
+    document.querySelector('.welcome-title');
 
   if (welcomeTitle) {
-    welcomeTitle.textContent = 'Bienvenido/a, administrador';
+    welcomeTitle.textContent =
+      'Bienvenido/a, administrador';
   }
 }
 
-// Botón de cerrar sesión.
+// =====================================================
+// CERRAR SESIÓN
+// =====================================================
+
 function configurarCerrarSesion() {
-  const logoutButton = document.querySelector('#logout-button');
+
+  const logoutButton =
+    document.querySelector('#logout-button');
 
   if (!logoutButton) {
     return;
   }
 
   logoutButton.addEventListener('click', () => {
+
     window.location.href = 'index.html';
+
   });
 }
 
-// Inicialización del panel administrativo.
-function inicializarAdministradorPanel() {
+// =====================================================
+// INICIALIZACIÓN
+// =====================================================
+
+async function inicializarAdministradorPanel() {
+
+  console.log('Inicializando panel administrador...');
+
   mostrarBienvenida();
-  cargarUsuarios();
-  cargarAlumnos();
-  cargarDocentes();
-  cargarPreceptores();
-  cargarMaterias();
+
+  await cargarResumenSupabase();
+
+  await cargarAlumnos();
+
+  await cargarDocentes();
+
+  await cargarPreceptores();
+
+  await cargarMaterias();
+
+  await cargarUsuarios();
+
+  await cargarNotas();
+
+  await cargarAsistencias();
+
   configurarCerrarSesion();
-  agregarAlumno();
-  agregarDocente();
-  agregarMateria();
+
+  console.log(
+    'Panel administrador inicializado correctamente.'
+  );
 
   window.adminPanel = {
-    agregarAlumno,
-    editarAlumno,
-    eliminarAlumno,
-    agregarDocente,
-    editarDocente,
-    eliminarDocente,
-    agregarMateria,
-    editarMateria,
-    eliminarMateria,
-    cargarUsuarios,
+
+    cargarResumenSupabase,
+
     cargarAlumnos,
+
     cargarDocentes,
+
     cargarPreceptores,
-    cargarMaterias
+
+    cargarMaterias,
+
+    cargarUsuarios,
+
+    cargarNotas,
+
+    cargarAsistencias
+
   };
 }
 
-document.addEventListener('DOMContentLoaded', inicializarAdministradorPanel);
+// =====================================================
+// ARRANQUE
+// =====================================================
+
+document.addEventListener(
+  'DOMContentLoaded',
+  inicializarAdministradorPanel
+);
+```
