@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel del Docente</title>
+    <meta
+      name="description"
+      content="Panel principal del docente para el Sistema de Gestión Escolar"
+    />
+    <link rel="stylesheet" href="css/dashboard.css">
+<script src="js/docente.js"></script>
+    
+  </head>
+  <body>
+    <header class="site-header" id="site-header">
+      <h1 class="site-title">Sistema de Gestión Escolar</h1>
+      <p class="teacher-name">Docente: Prof. García</p>
+    </header>
+
+    <div class="layout" id="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav" aria-label="Menú principal del docente">
+          <ul class="sidebar-menu">
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Mis Materias</a></li>
+            <li><a href="#">Mis Alumnos</a></li>
+            <li><a href="#">Cargar Notas</a></li>
+            <li><a href="#">Registrar Asistencia</a></li>
+            <li><a href="#">Mi Perfil</a></li>
+            <li><a href="#">Cerrar Sesión</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <section class="welcome-section" id="welcome-section">
+          <h2 class="welcome-title">Bienvenido/a, docente</h2>
+          <p class="welcome-text">
+            Aquí puedes gestionar tus materias, alumnos, notas y asistencias.
+          </p>
+        </section>
+
+        <section class="summary-section" id="summary-section" aria-label="Resumen docente">
+          <article class="summary-card" id="card-materias">
+            <h3>Materias asignadas</h3>
+            <p>4</p>
+          </article>
+
+          <article class="summary-card" id="card-alumnos">
+            <h3>Cantidad de alumnos</h3>
+            <p>120</p>
+          </article>
+
+          <article class="summary-card" id="card-asistencias">
+            <h3>Asistencias registradas hoy</h3>
+            <p>86</p>
+          </article>
+
+          <article class="summary-card" id="card-notas-pendientes">
+            <h3>Notas pendientes de cargar</h3>
+            <p>7</p>
+          </article>
+        </section>
+
+        <section class="data-section" id="mis-materias-section">
+          <h3>Mis Materias</h3>
+          <table class="data-table" id="mis-materias-table">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Curso</th>
+                <th>Cantidad de alumnos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Matemática</td>
+                <td>5° A</td>
+                <td>32</td>
+              </tr>
+              <tr>
+                <td>Historia</td>
+                <td>4° B</td>
+                <td>28</td>
+              </tr>
+              <tr>
+                <td>Lengua</td>
+                <td>6° A</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="lista-alumnos-section">
+          <h3>Lista de Alumnos</h3>
+          <table class="data-table" id="lista-alumnos-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>40123456</td>
+                <td>Juan</td>
+                <td>Pérez</td>
+                <td>Regular</td>
+              </tr>
+              <tr>
+                <td>40234567</td>
+                <td>María</td>
+                <td>Gómez</td>
+                <td>Regular</td>
+              </tr>
+              <tr>
+                <td>40345678</td>
+                <td>Luis</td>
+                <td>Fernández</td>
+                <td>Observado</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="form-section" id="cargar-nota-section">
+          <h3>Cargar Nota</h3>
+          <form class="panel-form" id="cargar-nota-form" method="post" action="#">
+            <div class="form-group">
+              <label for="alumno-nota">Alumno</label>
+              <input type="text" id="alumno-nota" name="alumno-nota" />
+            </div>
+
+            <div class="form-group">
+              <label for="materia-nota">Materia</label>
+              <input type="text" id="materia-nota" name="materia-nota" />
+            </div>
+
+            <div class="form-group">
+              <label for="nota">Nota</label>
+              <input type="number" id="nota" name="nota" min="0" max="10" step="0.1" />
+            </div>
+
+            <button type="submit">Guardar</button>
+          </form>
+        </section>
+
+        <section class="form-section" id="registrar-asistencia-section">
+          <h3>Registrar Asistencia</h3>
+          <form class="panel-form" id="registrar-asistencia-form" method="post" action="#">
+            <div class="form-group">
+              <label for="alumno-asistencia">Alumno</label>
+              <input type="text" id="alumno-asistencia" name="alumno-asistencia" />
+            </div>
+
+            <div class="form-group">
+              <label for="fecha-asistencia">Fecha</label>
+              <input type="date" id="fecha-asistencia" name="fecha-asistencia" />
+            </div>
+
+            <div class="form-group">
+              <label for="estado-asistencia">Estado</label>
+              <select id="estado-asistencia" name="estado-asistencia">
+                <option value="">Seleccione un estado</option>
+                <option value="presente">Presente</option>
+                <option value="ausente">Ausente</option>
+                <option value="tarde">Tarde</option>
+              </select>
+            </div>
+
+            <button type="submit">Registrar</button>
+          </form>
+        </section>
+
+        <section class="profile-section" id="profile-section">
+          <h3>Mi Perfil</h3>
+          <dl class="profile-list">
+            <div>
+              <dt>DNI</dt>
+              <dd>30123456</dd>
+            </div>
+            <div>
+              <dt>Nombre</dt>
+              <dd>María</dd>
+            </div>
+            <div>
+              <dt>Apellido</dt>
+              <dd>García</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer" id="site-footer">
+      <p>Proyecto Sistema de Gestión Escolar</p>
+    </footer>
+  </body>
+</html>

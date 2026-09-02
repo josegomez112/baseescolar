@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+```
+<title>Panel del Alumno</title>
+
+<meta
+  name="description"
+  content="Panel principal del alumno para el Sistema de Gestión Escolar"
+/>
+
+<link rel="stylesheet" href="css/dashboard.css">
+
+<script type="module" src="js/alumno.js"></script>
+```
+
+  </head>
+
+  <body>
+
+```
+<header>
+  <h1>Sistema de Gestión Escolar</h1>
+</header>
+
+<div>
+
+  <aside>
+    <nav aria-label="Menú principal del alumno">
+
+      <ul>
+
+        <li>
+          <a href="#">Inicio</a>
+        </li>
+
+        <li>
+          <a href="#materias">Mis Materias</a>
+        </li>
+
+        <li>
+          <a href="#notas">Mis Notas</a>
+        </li>
+
+        <li>
+          <a href="#asistencias">Mis Asistencias</a>
+        </li>
+
+        <li>
+          <a href="#perfil">Mi Perfil</a>
+        </li>
+
+        <li>
+          <a href="#" id="logout-button">Cerrar sesión</a>
+        </li>
+
+      </ul>
+
+    </nav>
+  </aside>
+
+
+  <main>
+
+    <!-- ========================================= -->
+    <!-- BIENVENIDA -->
+    <!-- ========================================= -->
+
+    <section>
+
+      <h2 id="welcome-title">
+        Bienvenido/a, Alumno
+      </h2>
+
+      <p>
+        Esta es tu vista principal del sistema escolar.
+      </p>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- RESUMEN -->
+    <!-- ========================================= -->
+
+    <section aria-label="Resumen del alumno">
+
+      <article>
+
+        <h3>Cantidad de materias</h3>
+
+        <p id="cantidad-materias">
+          0
+        </p>
+
+      </article>
+
+
+      <article>
+
+        <h3>Promedio general</h3>
+
+        <p id="promedio-general">
+          -
+        </p>
+
+      </article>
+
+
+      <article>
+
+        <h3>Porcentaje de asistencia</h3>
+
+        <p id="porcentaje-asistencia">
+          -
+        </p>
+
+      </article>
+
+
+      <article>
+
+        <h3>Estado académico</h3>
+
+        <p id="estado-academico">
+          -
+        </p>
+
+      </article>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- MATERIAS -->
+    <!-- ========================================= -->
+
+    <section id="materias">
+
+      <h3>Mis Materias</h3>
+
+      <table id="materias-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Materia</th>
+
+            <th>Docente</th>
+
+            <th>Estado</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <!-- Las materias se cargarán desde Supabase -->
+
+        </tbody>
+
+      </table>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- NOTAS -->
+    <!-- ========================================= -->
+
+    <section id="notas">
+
+      <h3>Mis Notas</h3>
+
+      <table id="notas-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Materia</th>
+
+            <th>Nota</th>
+
+            <th>Fecha</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <!-- Las notas se cargarán desde Supabase -->
+
+        </tbody>
+
+      </table>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- ASISTENCIAS -->
+    <!-- ========================================= -->
+
+    <section id="asistencias">
+
+      <h3>Mis Asistencias</h3>
+
+      <table id="asistencias-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Fecha</th>
+
+            <th>Estado</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <!-- Las asistencias se cargarán desde Supabase -->
+
+        </tbody>
+
+      </table>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- PERFIL -->
+    <!-- ========================================= -->
+
+    <section id="perfil">
+
+      <h3>Mi Perfil</h3>
+
+      <dl>
+
+        <div>
+
+          <dt>DNI</dt>
+
+          <dd id="perfil-dni">
+            -
+          </dd>
+
+        </div>
+
+
+        <div>
+
+          <dt>Nombre</dt>
+
+          <dd id="perfil-nombre">
+            -
+          </dd>
+
+        </div>
+
+
+        <div>
+
+          <dt>Apellido</dt>
+
+          <dd id="perfil-apellido">
+            -
+          </dd>
+
+        </div>
+
+      </dl>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<footer>
+
+  <p>
+    Proyecto Sistema de Gestión Escolar
+  </p>
+
+</footer>
+```
+
+  </body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel del Preceptor</title>
+    <meta
+      name="description"
+      content="Panel principal del preceptor para el Sistema de Gestión Escolar"
+    />
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="js/preceptor.js"></script>
+  </head>
+  <body>
+    <header class="site-header" id="site-header">
+      <h1 class="site-title">Sistema de Gestión Escolar</h1>
+      <p class="preceptor-name">Preceptor: Prof. Ramírez</p>
+    </header>
+
+    <div class="layout" id="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav" aria-label="Menú principal del preceptor">
+          <ul class="sidebar-menu">
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Alumnos</a></li>
+            <li><a href="#">Asistencias</a></li>
+            <li><a href="#">Justificaciones</a></li>
+            <li><a href="#">Reportes</a></li>
+            <li><a href="#">Mi Perfil</a></li>
+            <li><a href="#">Cerrar Sesión</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <section class="welcome-section" id="welcome-section">
+          <h2 class="welcome-title">Bienvenido/a, preceptor</h2>
+          <p class="welcome-text">
+            Aquí puedes supervisar alumnos, asistencias y justificaciones pendientes.
+          </p>
+        </section>
+
+        <section class="summary-section" id="summary-section" aria-label="Resumen del preceptor">
+          <article class="summary-card" id="card-total-alumnos">
+            <h3>Total de alumnos</h3>
+            <p>320</p>
+          </article>
+
+          <article class="summary-card" id="card-presentes-hoy">
+            <h3>Presentes hoy</h3>
+            <p>286</p>
+          </article>
+
+          <article class="summary-card" id="card-ausentes-hoy">
+            <h3>Ausentes hoy</h3>
+            <p>18</p>
+          </article>
+
+          <article class="summary-card" id="card-justificaciones-pendientes">
+            <h3>Justificaciones pendientes</h3>
+            <p>12</p>
+          </article>
+        </section>
+
+        <section class="search-section" id="search-section">
+          <h3>Buscar alumno</h3>
+          <label for="buscador-alumno">DNI, nombre o apellido</label>
+          <input
+            type="search"
+            id="buscador-alumno"
+            name="buscador-alumno"
+            placeholder="Buscar por DNI, nombre o apellido"
+          />
+        </section>
+
+        <section class="data-section" id="control-asistencia-section">
+          <h3>Control de Asistencia</h3>
+          <table class="data-table" id="control-asistencia-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Curso</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>40123456</td>
+                <td>Juan</td>
+                <td>5° A</td>
+                <td>Presente</td>
+                <td>2026-08-03</td>
+              </tr>
+              <tr>
+                <td>40234567</td>
+                <td>María</td>
+                <td>5° A</td>
+                <td>Ausente</td>
+                <td>2026-08-03</td>
+              </tr>
+              <tr>
+                <td>40345678</td>
+                <td>Luis</td>
+                <td>6° B</td>
+                <td>Tarde</td>
+                <td>2026-08-03</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="form-section" id="registrar-asistencia-section">
+          <h3>Registrar Asistencia</h3>
+          <form class="panel-form" id="registrar-asistencia-form" method="post" action="#">
+            <div class="form-group">
+              <label for="alumno-asistencia">Alumno</label>
+              <input type="text" id="alumno-asistencia" name="alumno-asistencia" />
+            </div>
+
+            <div class="form-group">
+              <label for="fecha-asistencia">Fecha</label>
+              <input type="date" id="fecha-asistencia" name="fecha-asistencia" />
+            </div>
+
+            <div class="form-group">
+              <label for="estado-asistencia">Estado</label>
+              <select id="estado-asistencia" name="estado-asistencia">
+                <option value="">Seleccione un estado</option>
+                <option value="presente">Presente</option>
+                <option value="ausente">Ausente</option>
+                <option value="tarde">Tarde</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="observaciones-asistencia">Observaciones</label>
+              <textarea
+                id="observaciones-asistencia"
+                name="observaciones-asistencia"
+                rows="4"
+              ></textarea>
+            </div>
+
+            <button type="submit">Guardar</button>
+          </form>
+        </section>
+
+        <section class="profile-section" id="profile-section">
+          <h3>Mi Perfil</h3>
+          <dl class="profile-list">
+            <div>
+              <dt>DNI</dt>
+              <dd>28765432</dd>
+            </div>
+            <div>
+              <dt>Nombre</dt>
+              <dd>Laura</dd>
+            </div>
+            <div>
+              <dt>Apellido</dt>
+              <dd>Ramírez</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer" id="site-footer">
+      <p>Proyecto Sistema de Gestión Escolar</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel del Administrador</title>
+    <meta
+      name="description"
+      content="Panel principal del administrador para el Sistema de Gestión Escolar"
+    />
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="js/administrador.js"></script>
+  </head>
+  <body>
+    <header class="site-header" id="site-header">
+      <h1 class="site-title">Sistema de Gestión Escolar</h1>
+      <p class="admin-name">Administrador: Lic. Torres</p>
+    </header>
+
+    <div class="layout" id="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav" aria-label="Menú principal del administrador">
+          <ul class="sidebar-menu">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Alumnos</a></li>
+            <li><a href="#">Docentes</a></li>
+            <li><a href="#">Preceptores</a></li>
+            <li><a href="#">Materias</a></li>
+            <li><a href="#">Usuarios</a></li>
+            <li><a href="#">Reportes</a></li>
+            <li><a href="#">Configuración</a></li>
+            <li><a href="#">Cerrar Sesión</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <section class="welcome-section" id="welcome-section">
+          <h2 class="welcome-title">Bienvenido/a, administrador</h2>
+          <p class="welcome-text">
+            Aquí puedes gestionar alumnos, docentes, materias, usuarios y reportes del sistema.
+          </p>
+        </section>
+
+        <section class="summary-section" id="summary-section" aria-label="Resumen administrativo">
+          <article class="summary-card" id="card-total-alumnos">
+            <h3>Total de alumnos</h3>
+            <p>620</p>
+          </article>
+
+          <article class="summary-card" id="card-total-docentes">
+            <h3>Total de docentes</h3>
+            <p>48</p>
+          </article>
+
+          <article class="summary-card" id="card-total-materias">
+            <h3>Total de materias</h3>
+            <p>36</p>
+          </article>
+
+          <article class="summary-card" id="card-total-usuarios">
+            <h3>Total de usuarios</h3>
+            <p>710</p>
+          </article>
+        </section>
+
+        <section class="data-section" id="alumnos-section">
+          <h3>Alumnos</h3>
+          <table class="data-table" id="alumnos-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Curso</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>40123456</td>
+                <td>Juan</td>
+                <td>Pérez</td>
+                <td>5° A</td>
+              </tr>
+              <tr>
+                <td>40234567</td>
+                <td>María</td>
+                <td>Gómez</td>
+                <td>6° B</td>
+              </tr>
+              <tr>
+                <td>40345678</td>
+                <td>Luis</td>
+                <td>Fernández</td>
+                <td>7° A</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="docentes-section">
+          <h3>Docentes</h3>
+          <table class="data-table" id="docentes-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Especialidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>30123456</td>
+                <td>María</td>
+                <td>García</td>
+                <td>Matemática</td>
+              </tr>
+              <tr>
+                <td>30234567</td>
+                <td>Pedro</td>
+                <td>López</td>
+                <td>Historia</td>
+              </tr>
+              <tr>
+                <td>30345678</td>
+                <td>Ana</td>
+                <td>Romero</td>
+                <td>Lengua</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="materias-section">
+          <h3>Materias</h3>
+          <table class="data-table" id="materias-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Curso</th>
+                <th>Docente</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Matemática</td>
+                <td>5° A</td>
+                <td>María García</td>
+              </tr>
+              <tr>
+                <td>Historia</td>
+                <td>4° B</td>
+                <td>Pedro López</td>
+              </tr>
+              <tr>
+                <td>Lengua</td>
+                <td>6° A</td>
+                <td>Ana Romero</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="form-section" id="crear-usuario-section">
+          <h3>Crear nuevo usuario</h3>
+          <form class="panel-form" id="crear-usuario-form" method="post" action="#">
+            <div class="form-group">
+              <label for="usuario-nombre">Nombre</label>
+              <input type="text" id="usuario-nombre" name="usuario-nombre" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-apellido">Apellido</label>
+              <input type="text" id="usuario-apellido" name="usuario-apellido" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-email">Correo electrónico</label>
+              <input type="email" id="usuario-email" name="usuario-email" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-rol">Rol</label>
+              <select id="usuario-rol" name="usuario-rol">
+                <option value="">Seleccione un rol</option>
+                <option value="alumno">Alumno</option>
+                <option value="docente">Docente</option>
+                <option value="preceptor">Preceptor</option>
+                <option value="administrador">Administrador</option>
+              </select>
+            </div>
+
+            <button type="submit">Crear usuario</button>
+          </form>
+        </section>
+
+        <section class="form-section" id="registrar-materia-section">
+          <h3>Registrar nueva materia</h3>
+          <form class="panel-form" id="registrar-materia-form" method="post" action="#">
+            <div class="form-group">
+              <label for="materia-nombre">Nombre de la materia</label>
+              <input type="text" id="materia-nombre" name="materia-nombre" />
+            </div>
+
+            <div class="form-group">
+              <label for="materia-curso">Curso</label>
+              <input type="text" id="materia-curso" name="materia-curso" />
+            </div>
+
+            <div class="form-group">
+              <label for="materia-docente">Docente</label>
+              <input type="text" id="materia-docente" name="materia-docente" />
+            </div>
+
+            <button type="submit">Registrar materia</button>
+          </form>
+        </section>
+
+        <section class="reports-section" id="reportes-section">
+          <h3>Reportes</h3>
+          <p>Resumen general del sistema escolar y estadísticas del mes.</p>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer" id="site-footer">
+      <p>Proyecto Sistema de Gestión Escolar</p>
+    </footer>
+  </body>
+</html>
