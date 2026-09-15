@@ -9,13 +9,12 @@
       content="Panel principal del docente para el Sistema de Gestión Escolar"
     />
     <link rel="stylesheet" href="css/dashboard.css">
-<script src="js/docente.js"></script>
-    
+    <script type="module" src="js/docente.js"></script>
   </head>
   <body>
     <header class="site-header" id="site-header">
       <h1 class="site-title">Sistema de Gestión Escolar</h1>
-      <p class="teacher-name">Docente: Prof. García</p>
+      <p class="teacher-name" id="teacher-name">Docente: Cargando...</p>
     </header>
 
     <div class="layout" id="layout">
@@ -28,14 +27,14 @@
             <li><a href="#">Cargar Notas</a></li>
             <li><a href="#">Registrar Asistencia</a></li>
             <li><a href="#">Mi Perfil</a></li>
-            <li><a href="#">Cerrar Sesión</a></li>
+            <li><a href="#" id="logout-button">Cerrar Sesión</a></li>
           </ul>
         </nav>
       </aside>
 
       <main class="main-content" id="main-content">
         <section class="welcome-section" id="welcome-section">
-          <h2 class="welcome-title">Bienvenido/a, docente</h2>
+          <h2 class="welcome-title" id="welcome-title">Bienvenido/a, docente</h2>
           <p class="welcome-text">
             Aquí puedes gestionar tus materias, alumnos, notas y asistencias.
           </p>
@@ -44,22 +43,22 @@
         <section class="summary-section" id="summary-section" aria-label="Resumen docente">
           <article class="summary-card" id="card-materias">
             <h3>Materias asignadas</h3>
-            <p>4</p>
+            <p id="cantidadMateriasDocente">-</p>
           </article>
 
           <article class="summary-card" id="card-alumnos">
             <h3>Cantidad de alumnos</h3>
-            <p>120</p>
+            <p id="cantidadAlumnosDocente">-</p>
           </article>
 
           <article class="summary-card" id="card-asistencias">
             <h3>Asistencias registradas hoy</h3>
-            <p>86</p>
+            <p id="asistenciasHoyDocente">-</p>
           </article>
 
           <article class="summary-card" id="card-notas-pendientes">
             <h3>Notas pendientes de cargar</h3>
-            <p>7</p>
+            <p id="notasPendientesDocente">-</p>
           </article>
         </section>
 
@@ -75,19 +74,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>Matemática</td>
-                <td>5° A</td>
-                <td>32</td>
-              </tr>
-              <tr>
-                <td>Historia</td>
-                <td>4° B</td>
-                <td>28</td>
-              </tr>
-              <tr>
-                <td>Lengua</td>
-                <td>6° A</td>
-                <td>30</td>
+                <td colspan="3">Cargando...</td>
               </tr>
             </tbody>
           </table>
@@ -106,22 +93,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>40123456</td>
-                <td>Juan</td>
-                <td>Pérez</td>
-                <td>Regular</td>
-              </tr>
-              <tr>
-                <td>40234567</td>
-                <td>María</td>
-                <td>Gómez</td>
-                <td>Regular</td>
-              </tr>
-              <tr>
-                <td>40345678</td>
-                <td>Luis</td>
-                <td>Fernández</td>
-                <td>Observado</td>
+                <td colspan="4">Cargando...</td>
               </tr>
             </tbody>
           </table>
@@ -129,15 +101,19 @@
 
         <section class="form-section" id="cargar-nota-section">
           <h3>Cargar Nota</h3>
-          <form class="panel-form" id="cargar-nota-form" method="post" action="#">
+          <form class="panel-form" id="cargar-nota-form">
             <div class="form-group">
               <label for="alumno-nota">Alumno</label>
-              <input type="text" id="alumno-nota" name="alumno-nota" />
+              <select id="alumno-nota" name="alumno-nota">
+                <option value="">Seleccione un alumno</option>
+              </select>
             </div>
 
             <div class="form-group">
               <label for="materia-nota">Materia</label>
-              <input type="text" id="materia-nota" name="materia-nota" />
+              <select id="materia-nota" name="materia-nota">
+                <option value="">Seleccione una materia</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -151,10 +127,12 @@
 
         <section class="form-section" id="registrar-asistencia-section">
           <h3>Registrar Asistencia</h3>
-          <form class="panel-form" id="registrar-asistencia-form" method="post" action="#">
+          <form class="panel-form" id="registrar-asistencia-form">
             <div class="form-group">
               <label for="alumno-asistencia">Alumno</label>
-              <input type="text" id="alumno-asistencia" name="alumno-asistencia" />
+              <select id="alumno-asistencia" name="alumno-asistencia">
+                <option value="">Seleccione un alumno</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -181,15 +159,15 @@
           <dl class="profile-list">
             <div>
               <dt>DNI</dt>
-              <dd>30123456</dd>
+              <dd id="perfil-dni">-</dd>
             </div>
             <div>
               <dt>Nombre</dt>
-              <dd>María</dd>
+              <dd id="perfil-nombre">-</dd>
             </div>
             <div>
               <dt>Apellido</dt>
-              <dd>García</dd>
+              <dd id="perfil-apellido">-</dd>
             </div>
           </dl>
         </section>
