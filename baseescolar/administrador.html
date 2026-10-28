@@ -14,7 +14,7 @@
   <body>
     <header class="site-header" id="site-header">
       <h1 class="site-title">Sistema de Gestión Escolar</h1>
-      <p class="admin-name">Administrador: Lic. Torres</p>
+      <p class="admin-name" id="admin-name">Administrador: Cargando...</p>
     </header>
 
     <div class="layout" id="layout">
@@ -22,164 +22,138 @@
         <nav class="sidebar-nav" aria-label="Menú principal del administrador">
           <ul class="sidebar-menu">
             <li><a href="#">Dashboard</a></li>
-            <li><a href="#">Alumnos</a></li>
-            <li><a href="#">Docentes</a></li>
-            <li><a href="#">Preceptores</a></li>
-            <li><a href="#">Materias</a></li>
-            <li><a href="#">Usuarios</a></li>
-            <li><a href="#">Reportes</a></li>
-            <li><a href="#">Configuración</a></li>
-            <li><a href="#">Cerrar Sesión</a></li>
+            <li><a href="#buscar-section">Buscar</a></li>
+            <li><a href="#cursos-section">Cursos</a></li>
+            <li><a href="#crear-usuario-section">Crear usuario</a></li>
+            <li><a href="#registrar-materia-section">Materias</a></li>
+            <li><a href="#" id="logout-button">Cerrar Sesión</a></li>
           </ul>
         </nav>
       </aside>
 
       <main class="main-content" id="main-content">
         <section class="welcome-section" id="welcome-section">
-          <h2 class="welcome-title">Bienvenido/a, administrador</h2>
+          <h2 class="welcome-title" id="welcome-title">Bienvenido/a, administrador</h2>
           <p class="welcome-text">
-            Aquí puedes gestionar alumnos, docentes, materias, usuarios y reportes del sistema.
+            Aquí puedes gestionar alumnos, docentes, preceptores, cursos, materias y usuarios del sistema.
           </p>
         </section>
 
         <section class="summary-section" id="summary-section" aria-label="Resumen administrativo">
           <article class="summary-card" id="card-total-alumnos">
             <h3>Total de alumnos</h3>
-            <p>620</p>
+            <p>-</p>
           </article>
 
           <article class="summary-card" id="card-total-docentes">
             <h3>Total de docentes</h3>
-            <p>48</p>
+            <p>-</p>
           </article>
 
           <article class="summary-card" id="card-total-materias">
             <h3>Total de materias</h3>
-            <p>36</p>
+            <p>-</p>
           </article>
 
           <article class="summary-card" id="card-total-usuarios">
             <h3>Total de usuarios</h3>
-            <p>710</p>
+            <p>-</p>
           </article>
         </section>
 
-        <section class="data-section" id="alumnos-section">
-          <h3>Alumnos</h3>
-          <table class="data-table" id="alumnos-table">
+        <section class="data-section" id="buscar-section">
+          <h3>Buscar</h3>
+          <form class="panel-form" id="buscar-form" autocomplete="off">
+            <div class="form-group">
+              <label for="buscar-tipo">Buscar entre</label>
+              <select id="buscar-tipo" name="buscar-tipo">
+                <option value="alumno">Alumnos</option>
+                <option value="docente">Docentes</option>
+                <option value="preceptor">Preceptores</option>
+                <option value="administrador">Administradores</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="buscar-texto">DNI, nombre o apellido</label>
+              <input
+                type="search"
+                id="buscar-texto"
+                name="buscar-texto"
+                placeholder="Buscar por DNI, nombre o apellido"
+              />
+            </div>
+          </form>
+
+          <table class="data-table" id="resultados-table">
             <thead>
               <tr>
                 <th>DNI</th>
                 <th>Nombre</th>
                 <th>Apellido</th>
-                <th>Curso</th>
+                <th>Curso / Materias</th>
+                <th>Usuario</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>40123456</td>
-                <td>Juan</td>
-                <td>Pérez</td>
-                <td>5° A</td>
-              </tr>
-              <tr>
-                <td>40234567</td>
-                <td>María</td>
-                <td>Gómez</td>
-                <td>6° B</td>
-              </tr>
-              <tr>
-                <td>40345678</td>
-                <td>Luis</td>
-                <td>Fernández</td>
-                <td>7° A</td>
+                <td colspan="6">Escribí un DNI, nombre o apellido para buscar.</td>
               </tr>
             </tbody>
           </table>
         </section>
 
-        <section class="data-section" id="docentes-section">
-          <h3>Docentes</h3>
-          <table class="data-table" id="docentes-table">
-            <thead>
-              <tr>
-                <th>DNI</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Especialidad</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>30123456</td>
-                <td>María</td>
-                <td>García</td>
-                <td>Matemática</td>
-              </tr>
-              <tr>
-                <td>30234567</td>
-                <td>Pedro</td>
-                <td>López</td>
-                <td>Historia</td>
-              </tr>
-              <tr>
-                <td>30345678</td>
-                <td>Ana</td>
-                <td>Romero</td>
-                <td>Lengua</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+        <section class="data-section" id="cursos-section">
+          <h3>Cursos</h3>
+          <form class="panel-form" id="curso-filtro-form" autocomplete="off">
+            <div class="form-group">
+              <label for="curso-filtro">Ver curso</label>
+              <select id="curso-filtro" name="curso-filtro">
+                <option value="">Seleccione un curso</option>
+              </select>
+            </div>
+          </form>
 
-        <section class="data-section" id="materias-section">
-          <h3>Materias</h3>
-          <table class="data-table" id="materias-table">
+          <p id="curso-resumen">Seleccioná un curso para ver sus materias y alumnos.</p>
+
+          <table class="data-table" id="curso-materias-table">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Curso</th>
+                <th>Materia</th>
                 <th>Docente</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Matemática</td>
-                <td>5° A</td>
-                <td>María García</td>
-              </tr>
-              <tr>
-                <td>Historia</td>
-                <td>4° B</td>
-                <td>Pedro López</td>
-              </tr>
-              <tr>
-                <td>Lengua</td>
-                <td>6° A</td>
-                <td>Ana Romero</td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
+
+          <table class="data-table" id="curso-alumnos-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <section class="form-section" id="crear-curso-section">
+          <h3>Crear nuevo curso</h3>
+          <form class="panel-form" id="crear-curso-form" autocomplete="off">
+            <div class="form-group">
+              <label for="curso-nuevo">Nombre del curso</label>
+              <input type="text" id="curso-nuevo" name="curso-nuevo" placeholder="Ej: 3°17°" />
+            </div>
+
+            <button type="submit">Crear curso</button>
+          </form>
         </section>
 
         <section class="form-section" id="crear-usuario-section">
           <h3>Crear nuevo usuario</h3>
-          <form class="panel-form" id="crear-usuario-form" method="post" action="#">
-            <div class="form-group">
-              <label for="usuario-nombre">Nombre</label>
-              <input type="text" id="usuario-nombre" name="usuario-nombre" />
-            </div>
-
-            <div class="form-group">
-              <label for="usuario-apellido">Apellido</label>
-              <input type="text" id="usuario-apellido" name="usuario-apellido" />
-            </div>
-
-            <div class="form-group">
-              <label for="usuario-email">Correo electrónico</label>
-              <input type="email" id="usuario-email" name="usuario-email" />
-            </div>
-
+          <form class="panel-form" id="crear-usuario-form" autocomplete="off">
             <div class="form-group">
               <label for="usuario-rol">Rol</label>
               <select id="usuario-rol" name="usuario-rol">
@@ -191,26 +165,75 @@
               </select>
             </div>
 
+            <div class="form-group">
+              <label for="usuario-dni">DNI</label>
+              <input type="text" id="usuario-dni" name="usuario-dni" inputmode="numeric" maxlength="8" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-nombre">Nombre</label>
+              <input type="text" id="usuario-nombre" name="usuario-nombre" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-apellido">Apellido</label>
+              <input type="text" id="usuario-apellido" name="usuario-apellido" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-usuario">Usuario (para iniciar sesión)</label>
+              <input type="text" id="usuario-usuario" name="usuario-usuario" autocomplete="off" />
+            </div>
+
+            <div class="form-group">
+              <label for="usuario-password">Contraseña</label>
+              <input type="text" id="usuario-password" name="usuario-password" autocomplete="off" />
+            </div>
+
+            <div class="form-group" id="grupo-curso-alumno" style="display: none">
+              <label for="usuario-curso">Curso del alumno</label>
+              <select id="usuario-curso" name="usuario-curso">
+                <option value="">Seleccione un curso</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="grupo-materia" style="display: none">
+              <label for="usuario-materia">Materia que dicta</label>
+              <select id="usuario-materia" name="usuario-materia">
+                <option value="">Seleccione una materia</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="grupo-cursos" style="display: none">
+              <label>Cursos asignados</label>
+              <div id="usuario-cursos" style="display: flex; flex-wrap: wrap; gap: 14px"></div>
+            </div>
+
             <button type="submit">Crear usuario</button>
           </form>
         </section>
 
         <section class="form-section" id="registrar-materia-section">
-          <h3>Registrar nueva materia</h3>
-          <form class="panel-form" id="registrar-materia-form" method="post" action="#">
+          <h3>Registrar materia y asignar docente</h3>
+          <form class="panel-form" id="registrar-materia-form" autocomplete="off">
             <div class="form-group">
               <label for="materia-nombre">Nombre de la materia</label>
-              <input type="text" id="materia-nombre" name="materia-nombre" />
+              <input type="text" id="materia-nombre" name="materia-nombre" list="materias-lista" />
+              <datalist id="materias-lista"></datalist>
             </div>
 
             <div class="form-group">
               <label for="materia-curso">Curso</label>
-              <input type="text" id="materia-curso" name="materia-curso" />
+              <select id="materia-curso" name="materia-curso">
+                <option value="">Seleccione un curso</option>
+              </select>
             </div>
 
             <div class="form-group">
               <label for="materia-docente">Docente</label>
-              <input type="text" id="materia-docente" name="materia-docente" />
+              <select id="materia-docente" name="materia-docente">
+                <option value="">Sin asignar por ahora</option>
+              </select>
             </div>
 
             <button type="submit">Registrar materia</button>

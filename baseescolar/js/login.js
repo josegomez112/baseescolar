@@ -1,6 +1,6 @@
-
 import { supabase } from './supabase.js';
-console.log("login.js arrancó");
+
+console.log('login.js arrancó');
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
@@ -70,6 +70,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!data) {
         showError('Usuario o contraseña incorrectos.');
         return;
+      }
+
+      // Guarda quién inició sesión para que cada panel muestre sus propios datos.
+      try {
+        sessionStorage.setItem('usuario', data.usuario);
+        sessionStorage.setItem('rol', data.rol);
+
+        if (data.dni) {
+          sessionStorage.setItem('dni', String(data.dni));
+        } else {
+          sessionStorage.removeItem('dni');
+        }
+      } catch (storageError) {
+        console.warn('No se pudo guardar la sesión:', storageError);
       }
 
       // Si el usuario existe, redirige según el rol.

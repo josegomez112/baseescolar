@@ -1,6 +1,16 @@
 import { supabase } from './supabase.js';
 
-const DNI_ALUMNO = 12345678;
+// DNI del alumno que inició sesión. Si el login todavía no guarda el DNI,
+// se usa Jose Gomez como alumno de prueba.
+function obtenerDniSesion() {
+  try {
+    return Number(sessionStorage.getItem('dni')) || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+const DNI_ALUMNO = obtenerDniSesion() || 12345678;
 
 async function cargarAlumno() {
 
@@ -31,31 +41,33 @@ async function cargarAlumno() {
 
   // ==================================================
   // MIS MATERIAS
+  // El alumno pertenece a un curso, y las materias (con su docente)
+  // salen de la tabla dictado para ese curso.
   // ==================================================
 
-  const { data: relaciones, error: errorRelaciones } = await supabase
-    .from('alumno_materia')
-    .select('*')
-    .eq('dni_alumno', DNI_ALUMNO);
+  const { data: dictados, error: errorDictados } = await supabase
+    .from('dictado')
+    .select('id, materia(id, nombre), docente(dni, nombre, apellido)')
+    .eq('id_curso', alumno.id_curso);
 
-  if (errorRelaciones) {
-    console.error(
-      'Error al buscar materias del alumno:',
-      errorRelaciones
-    );
-    return;
+  if (errorDictados) {
+    console.error('Error al buscar las materias del alumno:', errorDictados);
   }
 
-  console.log('Relaciones encontradas:', relaciones);
+  const materias = (dictados || []).sort((a, b) =>
+    (a.materia?.nombre ?? '').localeCompare(b.materia?.nombre ?? '')
+  );
+
+  console.log('Materias del alumno:', materias);
 
   document.getElementById('cantidadMaterias').textContent =
-    relaciones.length;
+    materias.length;
 
   const materiasBody = document.getElementById('materiasBody');
 
   materiasBody.innerHTML = '';
 
-  if (relaciones.length === 0) {
+  if (materias.length === 0) {
 
     materiasBody.innerHTML = `
       <tr>
@@ -65,49 +77,16 @@ async function cargarAlumno() {
 
   } else {
 
-    for (const relacion of relaciones) {
+    for (const dictado of materias) {
 
-      const { data: materia, error: errorMateria } = await supabase
-        .from('materia')
-        .select('*')
-        .eq('id', relacion.id_materia)
-        .single();
-
-      if (errorMateria) {
-        console.error('Error al buscar materia:', errorMateria);
-        continue;
-      }
-
-      // Buscar el docente asignado a esta materia
-      let nombreDocente = '-';
-
-      const { data: relacionDocente, error: errorRelacionDocente } = await supabase
-        .from('profesor_materia')
-        .select('*')
-        .eq('id_materia', relacion.id_materia)
-        .single();
-
-      if (errorRelacionDocente) {
-        console.error('Error al buscar el docente de la materia:', errorRelacionDocente);
-      } else if (relacionDocente) {
-
-        const { data: docente, error: errorDocente } = await supabase
-          .from('docente')
-          .select('*')
-          .eq('dni', relacionDocente.dni_docente)
-          .single();
-
-        if (errorDocente) {
-          console.error('Error al buscar el docente:', errorDocente);
-        } else if (docente) {
-          nombreDocente = `${docente.nombre} ${docente.apellido}`;
-        }
-      }
+      const nombreDocente = dictado.docente
+        ? `${dictado.docente.nombre} ${dictado.docente.apellido}`
+        : '-';
 
       const fila = document.createElement('tr');
 
       fila.innerHTML = `
-        <td>${materia.nombre}</td>
+        <td>${dictado.materia?.nombre ?? '-'}</td>
         <td>${nombreDocente}</td>
         <td>En curso</td>
       `;
@@ -122,8 +101,9 @@ async function cargarAlumno() {
 
   const { data: notas, error: errorNotas } = await supabase
     .from('notas')
-    .select('*')
-    .eq('dni_alumno', DNI_ALUMNO);
+    .select('*, materia(nombre)')
+    .eq('dni_alumno', DNI_ALUMNO)
+    .order('fecha', { ascending: true });
 
   if (errorNotas) {
     console.error('Error al buscar notas:', errorNotas);
@@ -147,22 +127,12 @@ async function cargarAlumno() {
 
     for (const nota of notas) {
 
-      const { data: materiaNota, error: errorMateriaNota } = await supabase
-        .from('materia')
-        .select('*')
-        .eq('id', nota.id_materia)
-        .single();
-
-      const nombreMateria = errorMateriaNota || !materiaNota
-        ? '-'
-        : materiaNota.nombre;
-
       const fila = document.createElement('tr');
 
       fila.innerHTML = `
-        <td>${nombreMateria}</td>
+        <td>${nota.materia?.nombre ?? '-'}</td>
         <td>${nota.nota}</td>
-        <td>${nota.fecha}</td>
+        <td>${nota.fecha ?? '-'}</td>
       `;
 
       notasBody.appendChild(fila);
@@ -170,9 +140,9 @@ async function cargarAlumno() {
 
     const sumaNotas = notas.reduce((acc, n) => acc + Number(n.nota), 0);
     const promedio = sumaNotas / notas.length;
-    const promedioRedondeado = promedio.toFixed(2);
 
-    document.getElementById('promedioGeneral').textContent = promedioRedondeado;
+    document.getElementById('promedioGeneral').textContent =
+      promedio.toFixed(2);
 
     document.getElementById('estadoAcademico').textContent =
       promedio >= 6 ? 'Regular' : 'Libre';
