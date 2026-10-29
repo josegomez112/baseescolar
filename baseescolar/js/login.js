@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js';
 
-console.log('login.js arrancó');
+console.log('login.js VERSION NUEVA arrancó');
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');

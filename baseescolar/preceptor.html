@@ -9,12 +9,12 @@
       content="Panel principal del preceptor para el Sistema de Gestión Escolar"
     />
     <link rel="stylesheet" href="css/dashboard.css">
-    <script src="js/preceptor.js"></script>
+    <script type="module" src="js/preceptor.js"></script>
   </head>
   <body>
     <header class="site-header" id="site-header">
       <h1 class="site-title">Sistema de Gestión Escolar</h1>
-      <p class="preceptor-name">Preceptor: Prof. Ramírez</p>
+      <p class="preceptor-name" id="preceptor-name">Preceptor: Cargando...</p>
     </header>
 
     <div class="layout" id="layout">
@@ -22,101 +22,156 @@
         <nav class="sidebar-nav" aria-label="Menú principal del preceptor">
           <ul class="sidebar-menu">
             <li><a href="#">Inicio</a></li>
-            <li><a href="#">Alumnos</a></li>
-            <li><a href="#">Asistencias</a></li>
-            <li><a href="#">Justificaciones</a></li>
-            <li><a href="#">Reportes</a></li>
-            <li><a href="#">Mi Perfil</a></li>
-            <li><a href="#">Cerrar Sesión</a></li>
+            <li><a href="#buscar-alumno-section">Buscar Alumno</a></li>
+            <li><a href="#buscar-docente-section">Buscar Docente</a></li>
+            <li><a href="#control-asistencia-section">Control de Asistencia</a></li>
+            <li><a href="#registrar-asistencia-section">Registrar Asistencia</a></li>
+            <li><a href="#profile-section">Mi Perfil</a></li>
+            <li><a href="#" id="logout-button">Cerrar Sesión</a></li>
           </ul>
         </nav>
       </aside>
 
       <main class="main-content" id="main-content">
         <section class="welcome-section" id="welcome-section">
-          <h2 class="welcome-title">Bienvenido/a, preceptor</h2>
+          <h2 class="welcome-title" id="welcome-title">Bienvenido/a, preceptor</h2>
           <p class="welcome-text">
-            Aquí puedes supervisar alumnos, asistencias y justificaciones pendientes.
+            Aquí puedes supervisar alumnos y asistencias de tus cursos.
           </p>
         </section>
 
         <section class="summary-section" id="summary-section" aria-label="Resumen del preceptor">
           <article class="summary-card" id="card-total-alumnos">
             <h3>Total de alumnos</h3>
-            <p>320</p>
+            <p id="totalAlumnosPreceptor">-</p>
           </article>
 
           <article class="summary-card" id="card-presentes-hoy">
             <h3>Presentes hoy</h3>
-            <p>286</p>
+            <p id="presentesHoyPreceptor">-</p>
           </article>
 
           <article class="summary-card" id="card-ausentes-hoy">
             <h3>Ausentes hoy</h3>
-            <p>18</p>
+            <p id="ausentesHoyPreceptor">-</p>
           </article>
 
           <article class="summary-card" id="card-justificaciones-pendientes">
             <h3>Justificaciones pendientes</h3>
-            <p>12</p>
+            <p id="justificacionesPreceptor">-</p>
           </article>
         </section>
 
-        <section class="search-section" id="search-section">
-          <h3>Buscar alumno</h3>
-          <label for="buscador-alumno">DNI, nombre o apellido</label>
-          <input
-            type="search"
-            id="buscador-alumno"
-            name="buscador-alumno"
-            placeholder="Buscar por DNI, nombre o apellido"
-          />
-        </section>
+        <section class="data-section" id="buscar-alumno-section">
+          <h3>Buscar Alumno</h3>
+          <form class="panel-form" id="buscar-alumno-form" autocomplete="off">
+            <div class="form-group">
+              <label for="buscador-alumno">DNI, nombre o apellido</label>
+              <input
+                type="search"
+                id="buscador-alumno"
+                name="buscador-alumno"
+                placeholder="Buscar alumno por DNI, nombre o apellido"
+              />
+            </div>
+          </form>
 
-        <section class="data-section" id="control-asistencia-section">
-          <h3>Control de Asistencia</h3>
-          <table class="data-table" id="control-asistencia-table">
+          <table class="data-table" id="alumnos-resultados-table">
             <thead>
               <tr>
                 <th>DNI</th>
                 <th>Nombre</th>
+                <th>Apellido</th>
                 <th>Curso</th>
-                <th>Estado</th>
-                <th>Fecha</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>40123456</td>
-                <td>Juan</td>
-                <td>5° A</td>
-                <td>Presente</td>
-                <td>2026-08-03</td>
-              </tr>
-              <tr>
-                <td>40234567</td>
-                <td>María</td>
-                <td>5° A</td>
-                <td>Ausente</td>
-                <td>2026-08-03</td>
-              </tr>
-              <tr>
-                <td>40345678</td>
-                <td>Luis</td>
-                <td>6° B</td>
-                <td>Tarde</td>
-                <td>2026-08-03</td>
+                <td colspan="4">Escribí un DNI, nombre o apellido para buscar.</td>
               </tr>
             </tbody>
           </table>
         </section>
 
+        <section class="data-section" id="buscar-docente-section">
+          <h3>Buscar Docente</h3>
+          <form class="panel-form" id="buscar-docente-form" autocomplete="off">
+            <div class="form-group">
+              <label for="buscador-docente">DNI, nombre o apellido</label>
+              <input
+                type="search"
+                id="buscador-docente"
+                name="buscador-docente"
+                placeholder="Buscar docente por DNI, nombre o apellido"
+              />
+            </div>
+          </form>
+
+          <table class="data-table" id="docentes-resultados-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Materias (curso)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">Escribí un DNI, nombre o apellido para buscar.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="control-asistencia-section">
+          <h3>Control de Asistencia</h3>
+          <form class="panel-form" id="control-asistencia-form" autocomplete="off">
+            <div class="form-group">
+              <label for="control-curso">Curso</label>
+              <select id="control-curso" name="control-curso">
+                <option value="">Seleccione un curso</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="control-fecha">Fecha</label>
+              <input type="date" id="control-fecha" name="control-fecha" />
+            </div>
+          </form>
+
+          <p id="control-resumen">Seleccioná un curso y una fecha para ver la asistencia.</p>
+
+          <table class="data-table" id="control-asistencia-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Curso</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
         <section class="form-section" id="registrar-asistencia-section">
           <h3>Registrar Asistencia</h3>
-          <form class="panel-form" id="registrar-asistencia-form" method="post" action="#">
+          <form class="panel-form" id="registrar-asistencia-form" autocomplete="off">
+            <div class="form-group">
+              <label for="curso-asistencia">Curso</label>
+              <select id="curso-asistencia" name="curso-asistencia">
+                <option value="">Seleccione un curso</option>
+              </select>
+            </div>
+
             <div class="form-group">
               <label for="alumno-asistencia">Alumno</label>
-              <input type="text" id="alumno-asistencia" name="alumno-asistencia" />
+              <select id="alumno-asistencia" name="alumno-asistencia">
+                <option value="">Primero elija un curso</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -134,15 +189,6 @@
               </select>
             </div>
 
-            <div class="form-group">
-              <label for="observaciones-asistencia">Observaciones</label>
-              <textarea
-                id="observaciones-asistencia"
-                name="observaciones-asistencia"
-                rows="4"
-              ></textarea>
-            </div>
-
             <button type="submit">Guardar</button>
           </form>
         </section>
@@ -152,15 +198,19 @@
           <dl class="profile-list">
             <div>
               <dt>DNI</dt>
-              <dd>28765432</dd>
+              <dd id="perfil-dni">-</dd>
             </div>
             <div>
               <dt>Nombre</dt>
-              <dd>Laura</dd>
+              <dd id="perfil-nombre">-</dd>
             </div>
             <div>
               <dt>Apellido</dt>
-              <dd>Ramírez</dd>
+              <dd id="perfil-apellido">-</dd>
+            </div>
+            <div>
+              <dt>Cursos</dt>
+              <dd id="perfil-cursos">-</dd>
             </div>
           </dl>
         </section>

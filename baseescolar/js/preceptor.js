@@ -1,283 +1,571 @@
-// Datos simulados del preceptor para desarrollar la lógica del panel.
-// En el futuro, estos datos podrán reemplazarse por consultas a Supabase.
-const preceptorData = {
-  preceptor: {
-    dni: '28765432',
-    nombre: 'Laura',
-    apellido: 'Ramírez'
-  },
-  alumnos: [
-    { dni: '40123456', nombre: 'Juan', apellido: 'Pérez', curso: '5° A' },
-    { dni: '40234567', nombre: 'María', apellido: 'Gómez', curso: '5° A' },
-    { dni: '40345678', nombre: 'Luis', apellido: 'Fernández', curso: '6° B' },
-    { dni: '40456789', nombre: 'Ana', apellido: 'Martínez', curso: '7° A' }
-  ],
-  asistencias: [
-    { alumno: 'Juan Pérez', fecha: '2026-08-03', estado: 'Presente', observaciones: 'Asistió normalmente.' },
-    { alumno: 'María Gómez', fecha: '2026-08-03', estado: 'Ausente', observaciones: 'Sin justificar.' },
-    { alumno: 'Luis Fernández', fecha: '2026-08-03', estado: 'Tarde', observaciones: 'Llegó 20 minutos tarde.' }
-  ]
-};
+import { supabase } from './supabase.js';
 
-// Función auxiliar para crear filas de tabla.
+// DNI del preceptor que inició sesión. Si el login no guardó ninguno,
+// se usa el preceptor de prueba.
+function obtenerDniSesion() {
+  try {
+    return Number(sessionStorage.getItem('dni')) || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+const DNI_PRECEPTOR = obtenerDniSesion() || 44556677;
+
+// Datos en memoria del preceptor: solo ve los cursos que tiene asignados.
+let cursos = [];   // { id, nombre }
+let alumnos = [];  // { dni, nombre, apellido, id_curso }
+let docentes = []; // { dni, nombre, apellido, detalle: ['Materia (Curso)', ...] }
+
+let tokenControl = 0;
+
+// =====================================================
+// UTILIDADES
+// =====================================================
+
+// Fecha local YYYY-MM-DD (toISOString usa UTC y después de las 21:00
+// en Argentina devolvería el día siguiente).
+function fechaLocalISO(fecha = new Date()) {
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+function normalizar(texto) {
+  return String(texto ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 function crearFilaTabla(celdas) {
   const fila = document.createElement('tr');
 
   celdas.forEach((valor) => {
     const celda = document.createElement('td');
-    celda.textContent = valor;
+    celda.textContent = valor === null || valor === undefined || valor === '' ? '-' : valor;
     fila.appendChild(celda);
   });
 
   return fila;
 }
 
-// Muestra el perfil del preceptor en la sección correspondiente.
-function cargarPerfilPreceptor() {
-  const dniElement = document.querySelector('#perfil-dni');
-  const nombreElement = document.querySelector('#perfil-nombre');
-  const apellidoElement = document.querySelector('#perfil-apellido');
-
-  if (dniElement) {
-    dniElement.textContent = preceptorData.preceptor.dni;
-  }
-
-  if (nombreElement) {
-    nombreElement.textContent = preceptorData.preceptor.nombre;
-  }
-
-  if (apellidoElement) {
-    apellidoElement.textContent = preceptorData.preceptor.apellido;
-  }
-}
-
-// Carga la lista de alumnos en la tabla de control.
-function cargarAlumnos() {
-  const tbody = document.querySelector('#control-asistencia-table tbody');
-
-  if (!tbody) {
-    return;
-  }
-
+function filaMensaje(tbody, columnas, mensaje) {
   tbody.innerHTML = '';
 
-  preceptorData.alumnos.forEach((alumno) => {
-    const fila = crearFilaTabla([
-      alumno.dni,
-      alumno.nombre,
-      alumno.curso,
-      'Pendiente',
-      ''
-    ]);
-    tbody.appendChild(fila);
-  });
+  const fila = document.createElement('tr');
+  const celda = document.createElement('td');
+
+  celda.colSpan = columnas;
+  celda.textContent = mensaje;
+  fila.appendChild(celda);
+  tbody.appendChild(fila);
 }
 
-// Carga los registros de asistencia en la tabla de asistencias.
-function cargarAsistencias() {
-  const tbody = document.querySelector('#control-asistencia-table tbody');
+function setTexto(selector, valor) {
+  const elemento = document.querySelector(selector);
 
-  if (!tbody) {
-    return;
-  }
-
-  // Se reconstruye la vista para mostrar los registros actuales.
-  tbody.innerHTML = '';
-
-  preceptorData.asistencias.forEach((registro) => {
-    const alumno = preceptorData.alumnos.find((item) => `${item.nombre} ${item.apellido}` === registro.alumno);
-
-    const fila = crearFilaTabla([
-      alumno ? alumno.dni : 'N/A',
-      alumno ? alumno.nombre : registro.alumno.split(' ')[0],
-      alumno ? alumno.curso : 'N/A',
-      registro.estado,
-      registro.fecha
-    ]);
-
-    tbody.appendChild(fila);
-  });
-}
-
-// Muestra un mensaje de bienvenida al cargar la página.
-function mostrarBienvenida() {
-  const welcomeTitle = document.querySelector('#welcome-title');
-
-  if (welcomeTitle) {
-    welcomeTitle.textContent = `Bienvenido/a, ${preceptorData.preceptor.nombre} ${preceptorData.preceptor.apellido}`;
+  if (elemento) {
+    elemento.textContent = valor;
   }
 }
 
-// Función auxiliar para mostrar mensajes dentro de la página.
-function mostrarMensaje(mensaje, tipo = 'info') {
-  const existing = document.querySelector('#message-box');
+function mostrarMensaje(mensaje, tipo = 'success') {
+  const existente = document.querySelector('#message-box');
 
-  if (existing) {
-    existing.remove();
+  if (existente) {
+    existente.remove();
   }
 
-  const mensajeBox = document.createElement('p');
-  mensajeBox.id = 'message-box';
-  mensajeBox.textContent = mensaje;
-  mensajeBox.style.marginTop = '12px';
-  mensajeBox.style.padding = '10px 12px';
-  mensajeBox.style.borderRadius = '8px';
-  mensajeBox.style.fontWeight = '600';
+  const caja = document.createElement('p');
+
+  caja.id = 'message-box';
+  caja.textContent = mensaje;
+  caja.style.position = 'sticky';
+  caja.style.top = '8px';
+  caja.style.zIndex = '20';
+  caja.style.margin = '0 0 12px';
+  caja.style.padding = '10px 12px';
+  caja.style.borderRadius = '8px';
+  caja.style.fontWeight = '600';
+  caja.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
 
   if (tipo === 'error') {
-    mensajeBox.style.background = '#fdecec';
-    mensajeBox.style.color = '#b42318';
+    caja.style.background = '#fdecec';
+    caja.style.color = '#b42318';
   } else {
-    mensajeBox.style.background = '#eafaf3';
-    mensajeBox.style.color = '#1f7a52';
+    caja.style.background = '#eafaf3';
+    caja.style.color = '#1f7a52';
   }
 
-  const formSection = document.querySelector('#registrar-asistencia-section');
+  const main = document.querySelector('#main-content');
 
-  if (formSection) {
-    formSection.appendChild(mensajeBox);
+  if (main) {
+    main.insertBefore(caja, main.firstChild);
   }
+
+  setTimeout(() => caja.remove(), 10000);
 }
 
-// Busca alumnos por DNI, nombre o apellido.
-function buscarAlumno() {
-  const input = document.querySelector('#buscador-alumno');
+function poblarSelect(select, opciones, textoVacio) {
+  if (!select) return;
 
-  if (!input) {
-    return;
-  }
+  select.innerHTML = '';
 
-  input.addEventListener('input', (event) => {
-    const valor = event.target.value.trim().toLowerCase();
-    const tbody = document.querySelector('#control-asistencia-table tbody');
+  const base = document.createElement('option');
+  base.value = '';
+  base.textContent = textoVacio;
+  select.appendChild(base);
 
-    if (!tbody) {
-      return;
-    }
-
-    tbody.innerHTML = '';
-
-    const resultados = preceptorData.alumnos.filter((alumno) => {
-      return (
-        alumno.dni.toLowerCase().includes(valor) ||
-        alumno.nombre.toLowerCase().includes(valor) ||
-        alumno.apellido.toLowerCase().includes(valor)
-      );
-    });
-
-    if (resultados.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5">No se encontraron coincidencias.</td></tr>';
-      return;
-    }
-
-    resultados.forEach((alumno) => {
-      const fila = crearFilaTabla([
-        alumno.dni,
-        alumno.nombre,
-        alumno.curso,
-        'Pendiente',
-        ''
-      ]);
-      tbody.appendChild(fila);
-    });
+  opciones.forEach(({ valor, texto }) => {
+    const option = document.createElement('option');
+    option.value = valor;
+    option.textContent = texto;
+    select.appendChild(option);
   });
 }
 
-// Registra una nueva asistencia con validación.
-function registrarAsistencia() {
+function nombreCurso(idCurso) {
+  return cursos.find((c) => c.id === idCurso)?.nombre ?? '-';
+}
+
+// Trae las asistencias de unos cursos en una fecha y deja el último
+// estado registrado de cada alumno (dni -> estado).
+async function estadosPorAlumno(idsCursos, fecha) {
+  const { data, error } = await supabase
+    .from('asistencia')
+    .select('id, dni_alumno, estado')
+    .in('id_curso', idsCursos)
+    .eq('fecha', fecha)
+    .order('id', { ascending: true });
+
+  if (error) {
+    console.error('Error al buscar asistencias:', error);
+    return null;
+  }
+
+  const estados = new Map();
+
+  (data || []).forEach((registro) => estados.set(registro.dni_alumno, registro.estado));
+
+  return estados;
+}
+
+// =====================================================
+// CARGA DE DATOS
+// =====================================================
+
+async function cargarPerfil() {
+  const { data: preceptor, error } = await supabase
+    .from('preceptor')
+    .select('*')
+    .eq('dni', DNI_PRECEPTOR)
+    .single();
+
+  if (error) {
+    console.error('Error al buscar preceptor:', error);
+    return;
+  }
+
+  setTexto('#perfil-dni', preceptor.dni);
+  setTexto('#perfil-nombre', preceptor.nombre);
+  setTexto('#perfil-apellido', preceptor.apellido);
+  setTexto('#preceptor-name', `Preceptor: ${preceptor.nombre} ${preceptor.apellido}`);
+  setTexto('#welcome-title', `Bienvenido/a, ${preceptor.nombre} ${preceptor.apellido}`);
+}
+
+async function cargarDatos() {
+  cursos = [];
+  alumnos = [];
+  docentes = [];
+
+  const { data: relaciones, error: errorCursos } = await supabase
+    .from('preceptor_curso')
+    .select('id_curso, curso(id, nombre)')
+    .eq('dni_preceptor', DNI_PRECEPTOR);
+
+  if (errorCursos) {
+    console.error('Error al buscar los cursos del preceptor:', errorCursos);
+    mostrarMensaje('No se pudieron cargar tus cursos.', 'error');
+    return;
+  }
+
+  cursos = (relaciones || [])
+    .map((r) => ({ id: r.id_curso, nombre: r.curso?.nombre ?? '-' }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  setTexto('#perfil-cursos', cursos.length > 0 ? cursos.map((c) => c.nombre).join(', ') : 'Sin cursos asignados');
+
+  if (cursos.length === 0) {
+    return;
+  }
+
+  const idsCursos = cursos.map((c) => c.id);
+
+  const [resAlumnos, resDictados] = await Promise.all([
+    supabase
+      .from('alumno')
+      .select('dni, nombre, apellido, id_curso')
+      .in('id_curso', idsCursos)
+      .order('apellido', { ascending: true }),
+    supabase
+      .from('dictado')
+      .select('id_curso, materia(nombre), docente(dni, nombre, apellido)')
+      .in('id_curso', idsCursos)
+  ]);
+
+  if (resAlumnos.error || resDictados.error) {
+    console.error('Error cargando alumnos o docentes:', resAlumnos.error, resDictados.error);
+    mostrarMensaje('No se pudieron cargar los alumnos o docentes.', 'error');
+    return;
+  }
+
+  alumnos = resAlumnos.data || [];
+
+  // Docentes que dictan en alguno de los cursos del preceptor.
+  const porDni = new Map();
+
+  (resDictados.data || []).forEach((d) => {
+    if (!d.docente) return;
+
+    const actual = porDni.get(d.docente.dni) || { ...d.docente, detalle: [] };
+    actual.detalle.push(`${d.materia?.nombre} (${nombreCurso(d.id_curso)})`);
+    porDni.set(d.docente.dni, actual);
+  });
+
+  docentes = [...porDni.values()].sort((a, b) => a.apellido.localeCompare(b.apellido));
+}
+
+// =====================================================
+// RESUMEN
+// =====================================================
+
+async function renderResumen() {
+  setTexto('#totalAlumnosPreceptor', alumnos.length);
+
+  // "Justificaciones" todavía no existe en la base de datos.
+  setTexto('#justificacionesPreceptor', '-');
+
+  if (cursos.length === 0) {
+    setTexto('#presentesHoyPreceptor', 0);
+    setTexto('#ausentesHoyPreceptor', 0);
+    return;
+  }
+
+  const estados = await estadosPorAlumno(cursos.map((c) => c.id), fechaLocalISO());
+
+  if (!estados) {
+    setTexto('#presentesHoyPreceptor', '-');
+    setTexto('#ausentesHoyPreceptor', '-');
+    return;
+  }
+
+  const valores = [...estados.values()];
+
+  setTexto('#presentesHoyPreceptor', valores.filter((e) => e === 'Presente').length);
+  setTexto('#ausentesHoyPreceptor', valores.filter((e) => e === 'Ausente').length);
+}
+
+// =====================================================
+// BUSCADORES
+// =====================================================
+
+function renderBuscadorAlumnos() {
+  const input = document.querySelector('#buscador-alumno');
+  const tbody = document.querySelector('#alumnos-resultados-table tbody');
+
+  if (!input || !tbody) return;
+
+  const termino = normalizar(input.value);
+
+  if (!termino) {
+    filaMensaje(tbody, 4, 'Escribí un DNI, nombre o apellido para buscar.');
+    return;
+  }
+
+  const resultados = alumnos.filter(
+    (a) =>
+      String(a.dni).includes(termino) ||
+      normalizar(`${a.nombre} ${a.apellido}`).includes(termino) ||
+      normalizar(`${a.apellido} ${a.nombre}`).includes(termino)
+  );
+
+  if (resultados.length === 0) {
+    filaMensaje(tbody, 4, 'No se encontraron alumnos en tus cursos.');
+    return;
+  }
+
+  tbody.innerHTML = '';
+
+  resultados.slice(0, 20).forEach((a) => {
+    tbody.appendChild(crearFilaTabla([a.dni, a.nombre, a.apellido, nombreCurso(a.id_curso)]));
+  });
+}
+
+function renderBuscadorDocentes() {
+  const input = document.querySelector('#buscador-docente');
+  const tbody = document.querySelector('#docentes-resultados-table tbody');
+
+  if (!input || !tbody) return;
+
+  const termino = normalizar(input.value);
+
+  if (!termino) {
+    filaMensaje(tbody, 4, 'Escribí un DNI, nombre o apellido para buscar.');
+    return;
+  }
+
+  const resultados = docentes.filter(
+    (d) =>
+      String(d.dni).includes(termino) ||
+      normalizar(`${d.nombre} ${d.apellido}`).includes(termino) ||
+      normalizar(`${d.apellido} ${d.nombre}`).includes(termino)
+  );
+
+  if (resultados.length === 0) {
+    filaMensaje(tbody, 4, 'No se encontraron docentes en tus cursos.');
+    return;
+  }
+
+  tbody.innerHTML = '';
+
+  resultados.slice(0, 20).forEach((d) => {
+    tbody.appendChild(crearFilaTabla([d.dni, d.nombre, d.apellido, d.detalle.join(', ')]));
+  });
+}
+
+// =====================================================
+// CONTROL DE ASISTENCIA (por curso y fecha)
+// =====================================================
+
+async function renderControl() {
+  const idCurso = Number(document.querySelector('#control-curso').value);
+  const fecha = document.querySelector('#control-fecha').value;
+  const tbody = document.querySelector('#control-asistencia-table tbody');
+
+  if (!tbody) return;
+
+  const token = ++tokenControl;
+
+  if (!idCurso || !fecha) {
+    tbody.innerHTML = '';
+    setTexto('#control-resumen', 'Seleccioná un curso y una fecha para ver la asistencia.');
+    return;
+  }
+
+  const estados = await estadosPorAlumno([idCurso], fecha);
+
+  if (token !== tokenControl) return;
+
+  if (!estados) {
+    setTexto('#control-resumen', 'No se pudo cargar la asistencia.');
+    return;
+  }
+
+  const alumnosCurso = alumnos.filter((a) => a.id_curso === idCurso);
+
+  tbody.innerHTML = '';
+
+  if (alumnosCurso.length === 0) {
+    filaMensaje(tbody, 6, 'Este curso todavía no tiene alumnos.');
+    setTexto('#control-resumen', `${nombreCurso(idCurso)}: sin alumnos.`);
+    return;
+  }
+
+  const conteo = { Presente: 0, Ausente: 0, Tarde: 0, 'Sin registrar': 0 };
+
+  alumnosCurso.forEach((a) => {
+    const estado = estados.get(a.dni) || 'Sin registrar';
+
+    conteo[estado] = (conteo[estado] || 0) + 1;
+
+    tbody.appendChild(
+      crearFilaTabla([a.dni, a.nombre, a.apellido, nombreCurso(idCurso), estado, fecha])
+    );
+  });
+
+  setTexto(
+    '#control-resumen',
+    `${nombreCurso(idCurso)} - ${fecha}: ${conteo.Presente} presente(s), ${conteo.Ausente} ausente(s), ` +
+      `${conteo.Tarde} tarde(s), ${conteo['Sin registrar']} sin registrar.`
+  );
+}
+
+// =====================================================
+// FORMULARIO: REGISTRAR ASISTENCIA
+// =====================================================
+
+function actualizarAlumnosFormulario() {
+  const idCurso = Number(document.querySelector('#curso-asistencia').value);
+  const select = document.querySelector('#alumno-asistencia');
+
+  const alumnosCurso = idCurso ? alumnos.filter((a) => a.id_curso === idCurso) : [];
+
+  poblarSelect(
+    select,
+    alumnosCurso.map((a) => ({ valor: a.dni, texto: `${a.apellido}, ${a.nombre} (${a.dni})` })),
+    idCurso ? 'Seleccione un alumno' : 'Primero elija un curso'
+  );
+}
+
+function refrescarSelectsCursos() {
+  const opciones = cursos.map((c) => ({ valor: c.id, texto: c.nombre }));
+
+  const controlCurso = document.querySelector('#control-curso');
+  const previo = controlCurso.value;
+
+  poblarSelect(controlCurso, opciones, 'Seleccione un curso');
+
+  if ([...controlCurso.options].some((o) => o.value === previo)) {
+    controlCurso.value = previo;
+  }
+
+  poblarSelect(document.querySelector('#curso-asistencia'), opciones, 'Seleccione un curso');
+  actualizarAlumnosFormulario();
+}
+
+function configurarFormularioAsistencia() {
   const form = document.querySelector('#registrar-asistencia-form');
 
-  if (!form) {
-    return;
-  }
+  if (!form) return;
 
-  form.addEventListener('submit', (event) => {
+  const estados = { presente: 'Presente', ausente: 'Ausente', tarde: 'Tarde' };
+
+  document.querySelector('#curso-asistencia').addEventListener('change', actualizarAlumnosFormulario);
+
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const alumnoInput = document.querySelector('#alumno-asistencia');
-    const fechaInput = document.querySelector('#fecha-asistencia');
-    const estadoSelect = document.querySelector('#estado-asistencia');
-    const observacionesInput = document.querySelector('#observaciones-asistencia');
+    const idCurso = document.querySelector('#curso-asistencia').value;
+    const dniAlumno = document.querySelector('#alumno-asistencia').value;
+    const fecha = document.querySelector('#fecha-asistencia').value;
+    const estadoElegido = document.querySelector('#estado-asistencia').value;
 
-    const campos = [alumnoInput, fechaInput, estadoSelect, observacionesInput];
-
-    if (campos.some((campo) => !campo || campo.value.trim() === '')) {
-      mostrarMensaje('Todos los campos son obligatorios.', 'error');
+    if (!idCurso || !dniAlumno || !fecha || !estadoElegido) {
+      mostrarMensaje('Completá curso, alumno, fecha y estado.', 'error');
       return;
     }
 
-    const nuevoRegistro = {
-      alumno: alumnoInput.value.trim(),
-      fecha: fechaInput.value,
-      estado: estadoSelect.value,
-      observaciones: observacionesInput.value.trim()
-    };
+    const estado = estados[estadoElegido] || estadoElegido;
+    const alumno = alumnos.find((a) => a.dni === Number(dniAlumno));
+    const nombreAlumno = alumno ? `${alumno.nombre} ${alumno.apellido}` : dniAlumno;
 
-    preceptorData.asistencias.push(nuevoRegistro);
-    cargarAsistencias();
+    // Si ese alumno ya tiene asistencia ese día, se corrige en vez de duplicarla.
+    const { data: existentes, error: errorExistentes } = await supabase
+      .from('asistencia')
+      .select('id, estado')
+      .eq('dni_alumno', Number(dniAlumno))
+      .eq('fecha', fecha)
+      .order('id', { ascending: true });
+
+    if (errorExistentes) {
+      console.error('Error al verificar la asistencia:', errorExistentes);
+      mostrarMensaje('No se pudo verificar la asistencia del alumno.', 'error');
+      return;
+    }
+
+    if (existentes && existentes.length > 0) {
+      const ultimo = existentes[existentes.length - 1];
+
+      const reemplazar = confirm(
+        `${nombreAlumno} ya tiene asistencia el ${fecha} (${ultimo.estado}).\n¿Querés cambiarla por "${estado}"?`
+      );
+
+      if (!reemplazar) return;
+
+      const { error } = await supabase
+        .from('asistencia')
+        .update({ estado, id_curso: Number(idCurso), dni_preceptor: DNI_PRECEPTOR })
+        .eq('id', ultimo.id);
+
+      if (error) {
+        console.error('Error al actualizar la asistencia:', error);
+        mostrarMensaje('No se pudo actualizar la asistencia.', 'error');
+        return;
+      }
+
+      mostrarMensaje(`Asistencia de ${nombreAlumno} actualizada: ${estado} (${fecha}).`);
+    } else {
+      const { error } = await supabase.from('asistencia').insert([
+        {
+          fecha,
+          estado,
+          dni_alumno: Number(dniAlumno),
+          id_curso: Number(idCurso),
+          dni_preceptor: DNI_PRECEPTOR
+        }
+      ]);
+
+      if (error) {
+        console.error('Error al registrar la asistencia:', error);
+        mostrarMensaje('No se pudo registrar la asistencia. Revisá la consola.', 'error');
+        return;
+      }
+
+      mostrarMensaje(`Asistencia registrada: ${nombreAlumno} - ${estado} (${fecha}).`);
+    }
+
     form.reset();
-    mostrarMensaje('Asistencia registrada correctamente.');
+    document.querySelector('#fecha-asistencia').value = fechaLocalISO();
+    actualizarAlumnosFormulario();
+
+    await renderResumen();
+    await renderControl();
   });
 }
 
-// Modifica un registro de asistencia existente.
-function editarAsistencia() {
-  if (!preceptorData.asistencias.length) {
-    return;
-  }
+// =====================================================
+// EVENTOS E INICIO
+// =====================================================
 
-  const registro = preceptorData.asistencias[0];
-  registro.estado = 'Presente';
-  registro.observaciones = 'Registro actualizado por el preceptor.';
+function configurarEventos() {
+  document.querySelector('#buscador-alumno').addEventListener('input', renderBuscadorAlumnos);
+  document.querySelector('#buscador-docente').addEventListener('input', renderBuscadorDocentes);
 
-  cargarAsistencias();
-  mostrarMensaje('Registro de asistencia actualizado correctamente.');
-}
-
-// Elimina un registro de asistencia.
-function eliminarAsistencia() {
-  if (!preceptorData.asistencias.length) {
-    mostrarMensaje('No hay registros para eliminar.', 'error');
-    return;
-  }
-
-  preceptorData.asistencias.pop();
-  cargarAsistencias();
-  mostrarMensaje('Registro de asistencia eliminado correctamente.');
-}
-
-// Botón de cerrar sesión.
-function configurarCerrarSesion() {
-  const logoutButton = document.querySelector('#logout-button');
-
-  if (!logoutButton) {
-    return;
-  }
-
-  logoutButton.addEventListener('click', () => {
-    window.location.href = 'index.html';
+  ['#buscar-alumno-form', '#buscar-docente-form', '#control-asistencia-form'].forEach((id) => {
+    document.querySelector(id).addEventListener('submit', (event) => event.preventDefault());
   });
+
+  document.querySelector('#control-curso').addEventListener('change', renderControl);
+  document.querySelector('#control-fecha').addEventListener('change', renderControl);
+
+  const logout = document.querySelector('#logout-button');
+
+  if (logout) {
+    logout.addEventListener('click', (event) => {
+      event.preventDefault();
+
+      try {
+        sessionStorage.clear();
+      } catch (error) {
+        // Sin acceso a sessionStorage: se ignora.
+      }
+
+      window.location.href = 'index.html';
+    });
+  }
 }
 
-// Inicializa la lógica del panel del preceptor.
-function inicializarPreceptorPanel() {
-  mostrarBienvenida();
-  cargarPerfilPreceptor();
-  cargarAlumnos();
-  cargarAsistencias();
-  buscarAlumno();
-  registrarAsistencia();
-  configurarCerrarSesion();
+async function inicializarPreceptorPanel() {
+  configurarEventos();
+  configurarFormularioAsistencia();
 
-  // Se exposponen funciones para ser reutilizadas en el futuro con Supabase.
-  window.preceptorPanel = {
-    editarAsistencia,
-    eliminarAsistencia,
-    cargarAlumnos,
-    cargarAsistencias,
-    buscarAlumno,
-    registrarAsistencia
-  };
+  const hoy = fechaLocalISO();
+
+  document.querySelector('#control-fecha').value = hoy;
+  document.querySelector('#fecha-asistencia').value = hoy;
+
+  await cargarPerfil();
+  await cargarDatos();
+
+  refrescarSelectsCursos();
+  renderBuscadorAlumnos();
+  renderBuscadorDocentes();
+
+  await renderResumen();
+  await renderControl();
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPreceptorPanel);
