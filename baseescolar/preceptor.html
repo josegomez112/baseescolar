@@ -20,15 +20,7 @@
     <div class="layout" id="layout">
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav" aria-label="Menú principal del preceptor">
-          <ul class="sidebar-menu">
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#buscar-alumno-section">Buscar Alumno</a></li>
-            <li><a href="#buscar-docente-section">Buscar Docente</a></li>
-            <li><a href="#control-asistencia-section">Control de Asistencia</a></li>
-            <li><a href="#registrar-asistencia-section">Registrar Asistencia</a></li>
-            <li><a href="#profile-section">Mi Perfil</a></li>
-            <li><a href="#" id="logout-button">Cerrar Sesión</a></li>
-          </ul>
+          <ul class="sidebar-menu"></ul>
         </nav>
       </aside>
 
@@ -220,5 +212,21 @@
     <footer class="site-footer" id="site-footer">
       <p>Proyecto Sistema de Gestión Escolar</p>
     </footer>
+    <script type="module">
+      import { iniciarMenu } from './js/menu.js';
+
+      iniciarMenu({
+        rol: 'preceptor',
+        items: [
+          { id: 'inicio', texto: 'Inicio', secciones: ['welcome-section', 'summary-section'] },
+          { id: 'alumnos', texto: 'Alumnos', secciones: ['buscar-alumno-section'], descripcion: 'Buscá alumnos de tus cursos' },
+          { id: 'docentes', texto: 'Docentes', secciones: ['buscar-docente-section'], descripcion: 'Docentes de tus cursos' },
+          { id: 'control', texto: 'Control de asistencia', secciones: ['control-asistencia-section'], descripcion: 'Asistencia por curso y fecha' },
+          { id: 'registrar', texto: 'Registrar asistencia', secciones: ['registrar-asistencia-section'], descripcion: 'Cargá o corregí asistencias' },
+          { id: 'perfil', texto: 'Mi perfil', secciones: ['profile-section'], rapido: false },
+          { id: 'salir', texto: 'Cerrar sesión', accion: 'salir' }
+        ]
+      });
+    </script>
   </body>
 </html>

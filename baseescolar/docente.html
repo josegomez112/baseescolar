@@ -20,15 +20,7 @@
     <div class="layout" id="layout">
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav" aria-label="Menú principal del docente">
-          <ul class="sidebar-menu">
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#mis-materias-section">Mis Materias</a></li>
-            <li><a href="#buscar-alumno-section">Buscar Alumno</a></li>
-            <li><a href="#cargar-nota-section">Cargar Notas</a></li>
-            <li><a href="#registrar-asistencia-section">Registrar Asistencia</a></li>
-            <li><a href="#profile-section">Mi Perfil</a></li>
-            <li><a href="#" id="logout-button">Cerrar Sesión</a></li>
-          </ul>
+          <ul class="sidebar-menu"></ul>
         </nav>
       </aside>
 
@@ -205,5 +197,21 @@
     <footer class="site-footer" id="site-footer">
       <p>Proyecto Sistema de Gestión Escolar</p>
     </footer>
+    <script type="module">
+      import { iniciarMenu } from './js/menu.js';
+
+      iniciarMenu({
+        rol: 'docente',
+        items: [
+          { id: 'inicio', texto: 'Inicio', secciones: ['welcome-section', 'summary-section'] },
+          { id: 'cursos', texto: 'Mis cursos', secciones: ['mis-materias-section'], descripcion: 'Materias, cursos y cantidad de alumnos' },
+          { id: 'alumnos', texto: 'Buscar alumno', secciones: ['buscar-alumno-section'], descripcion: 'Buscá por DNI, nombre o apellido' },
+          { id: 'notas', texto: 'Cargar notas', secciones: ['cargar-nota-section'], descripcion: 'Cargá notas a tus alumnos' },
+          { id: 'asistencia', texto: 'Asistencia', secciones: ['registrar-asistencia-section'], descripcion: 'Registrá la asistencia del día' },
+          { id: 'perfil', texto: 'Mi perfil', secciones: ['profile-section'], rapido: false },
+          { id: 'salir', texto: 'Cerrar sesión', accion: 'salir' }
+        ]
+      });
+    </script>
   </body>
 </html>

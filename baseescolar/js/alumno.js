@@ -16,7 +16,7 @@ async function cargarAlumno() {
 
   const { data: alumno, error: errorAlumno } = await supabase
     .from('alumno')
-    .select('*')
+    .select('*, curso(nombre)')
     .eq('dni', DNI_ALUMNO)
     .single();
 
@@ -38,6 +38,18 @@ async function cargarAlumno() {
 
   document.getElementById('perfilApellido').textContent =
     alumno.apellido;
+
+  const perfilCurso = document.getElementById('perfilCurso');
+
+  if (perfilCurso) {
+    perfilCurso.textContent = alumno.curso?.nombre ?? '-';
+  }
+
+  const nombreHeader = document.getElementById('nombreHeader');
+
+  if (nombreHeader) {
+    nombreHeader.textContent = `Alumno: ${alumno.nombre} ${alumno.apellido}`;
+  }
 
   // ==================================================
   // MIS MATERIAS

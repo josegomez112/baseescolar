@@ -245,7 +245,7 @@ function refrescarSelects() {
 async function cargarPerfilAdmin() {
   const { data, error } = await supabase
     .from('administrador')
-    .select('nombre, apellido')
+    .select('dni, nombre, apellido')
     .eq('dni', DNI_ADMIN)
     .maybeSingle();
 
@@ -255,6 +255,9 @@ async function cargarPerfilAdmin() {
     return;
   }
 
+  setTexto('#perfil-dni', data.dni);
+  setTexto('#perfil-nombre', data.nombre);
+  setTexto('#perfil-apellido', data.apellido);
   setTexto('#admin-name', `Administrador: ${data.nombre} ${data.apellido}`);
   setTexto('#welcome-title', `Bienvenido/a, ${data.nombre} ${data.apellido}`);
 }

@@ -20,14 +20,7 @@
     <div class="layout" id="layout">
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav" aria-label="Menú principal del administrador">
-          <ul class="sidebar-menu">
-            <li><a href="#">Dashboard</a></li>
-            <li><a href="#buscar-section">Buscar</a></li>
-            <li><a href="#cursos-section">Cursos</a></li>
-            <li><a href="#crear-usuario-section">Crear usuario</a></li>
-            <li><a href="#registrar-materia-section">Materias</a></li>
-            <li><a href="#" id="logout-button">Cerrar Sesión</a></li>
-          </ul>
+          <ul class="sidebar-menu"></ul>
         </nav>
       </aside>
 
@@ -240,9 +233,23 @@
           </form>
         </section>
 
-        <section class="reports-section" id="reportes-section">
-          <h3>Reportes</h3>
-          <p>Resumen general del sistema escolar y estadísticas del mes.</p>
+
+        <section class="profile-section" id="profile-section">
+          <h3>Mi Perfil</h3>
+          <dl class="profile-list">
+            <div>
+              <dt>DNI</dt>
+              <dd id="perfil-dni">-</dd>
+            </div>
+            <div>
+              <dt>Nombre</dt>
+              <dd id="perfil-nombre">-</dd>
+            </div>
+            <div>
+              <dt>Apellido</dt>
+              <dd id="perfil-apellido">-</dd>
+            </div>
+          </dl>
         </section>
       </main>
     </div>
@@ -250,5 +257,20 @@
     <footer class="site-footer" id="site-footer">
       <p>Proyecto Sistema de Gestión Escolar</p>
     </footer>
+    <script type="module">
+      import { iniciarMenu } from './js/menu.js';
+
+      iniciarMenu({
+        rol: 'administrador',
+        items: [
+          { id: 'inicio', texto: 'Inicio', secciones: ['welcome-section', 'summary-section'] },
+          { id: 'personas', texto: 'Personas', secciones: ['buscar-section', 'crear-usuario-section'], descripcion: 'Buscar, crear y eliminar usuarios' },
+          { id: 'cursos', texto: 'Cursos', secciones: ['cursos-section', 'crear-curso-section'], descripcion: 'Alumnos y materias de cada curso' },
+          { id: 'materias', texto: 'Materias', secciones: ['registrar-materia-section'], descripcion: 'Registrá materias y asigná docentes' },
+          { id: 'perfil', texto: 'Mi perfil', secciones: ['profile-section'], rapido: false },
+          { id: 'salir', texto: 'Cerrar sesión', accion: 'salir' }
+        ]
+      });
+    </script>
   </body>
 </html>
