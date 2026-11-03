@@ -1,4 +1,14 @@
 import { supabase } from './supabase.js';
+import {
+  NOTAS_POR_BIMESTRE,
+  fechaLocalISO,
+  bimestreActual,
+  etiquetaBimestre,
+  promedio as promediar,
+  estadoDePromedio,
+  notasDelAnio,
+  promedioGeneral
+} from './bimestres.js';
 
 // DNI del docente que inició sesión. Por ahora, si el login todavía no
 // guarda el DNI, se usa Pepito Sanchez como docente de prueba.
@@ -12,8 +22,8 @@ function obtenerDniSesion() {
 
 const DNI_DOCENTE = obtenerDniSesion() || 87654321;
 
-const NOTAS_ESPERADAS_POR_MES = 3;
-const NOTA_APROBACION = 6;
+const ANIO = new Date().getFullYear();
+const BIMESTRE_ACTUAL = bimestreActual();
 
 // Datos en memoria del docente (se recargan después de cada alta).
 let dictados = [];       // curso + materia que dicta este docente
@@ -27,15 +37,6 @@ const formularios = [
 ];
 
 // --------- Utilidades ---------
-// Fecha local en formato YYYY-MM-DD (toISOString usa UTC y después de las
-// 21:00 en Argentina devolvería el día siguiente).
-function fechaLocalISO(fecha = new Date()) {
-  const anio = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
-  return `${anio}-${mes}-${dia}`;
-}
-
 function normalizar(texto) {
   return String(texto ?? '')
     .normalize('NFD')
@@ -141,7 +142,7 @@ async function cargarDatos() {
 
   const { data: notasData, error: errorNotas } = await supabase
     .from('notas')
-    .select('dni_alumno, dni_docente, id_materia, nota, fecha')
+    .select('id, dni_alumno, dni_docente, id_materia, nota, fecha, bimestre')
     .in('dni_alumno', alumnos.map((a) => a.dni));
 
   if (errorNotas) {
@@ -151,18 +152,17 @@ async function cargarDatos() {
 
   notasDeAlumnos = notasData || [];
 
-  // Promedio general por alumno (todas las materias), igual que en el panel del alumno.
-  const acumulado = new Map();
+  // Promedio general por alumno: promedio de sus promedios por materia y bimestre (año actual).
+  const porAlumno = new Map();
 
-  notasDeAlumnos.forEach((n) => {
-    const actual = acumulado.get(n.dni_alumno) || { suma: 0, cantidad: 0 };
-    actual.suma += Number(n.nota);
-    actual.cantidad += 1;
-    acumulado.set(n.dni_alumno, actual);
+  notasDelAnio(notasDeAlumnos, ANIO).forEach((n) => {
+    const lista = porAlumno.get(n.dni_alumno) || [];
+    lista.push(n);
+    porAlumno.set(n.dni_alumno, lista);
   });
 
-  acumulado.forEach((valor, dni) => {
-    promedios.set(dni, valor.suma / valor.cantidad);
+  porAlumno.forEach((lista, dni) => {
+    promedios.set(dni, promedioGeneral(lista));
   });
 }
 
@@ -206,11 +206,7 @@ async function renderResumen() {
     setTexto('#asistenciasHoyDocente', count ?? 0);
   }
 
-  // Notas pendientes: se esperan 3 por alumno, por materia, por mes.
-  const hoy = new Date();
-  const inicioMes = fechaLocalISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
-  const finMes = fechaLocalISO(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
-
+  // Notas pendientes: se esperan 3 por alumno y materia en el bimestre actual.
   let pendientes = 0;
 
   dictados.forEach((d) => {
@@ -221,12 +217,11 @@ async function renderResumen() {
           (n) =>
             n.dni_alumno === a.dni &&
             n.id_materia === d.id_materia &&
-            n.dni_docente === DNI_DOCENTE &&
-            n.fecha >= inicioMes &&
-            n.fecha <= finMes
+            n.bimestre === BIMESTRE_ACTUAL &&
+            String(n.fecha).startsWith(String(ANIO))
         ).length;
 
-        pendientes += Math.max(0, NOTAS_ESPERADAS_POR_MES - cargadas);
+        pendientes += Math.max(0, NOTAS_POR_BIMESTRE - cargadas);
       });
   });
 
@@ -267,9 +262,9 @@ function renderBusqueda() {
   resultados.slice(0, 20).forEach((a) => {
     const promedio = promedios.get(a.dni);
     const estado =
-      promedio === undefined
+      promedio === undefined || promedio === null
         ? '-'
-        : promedio >= NOTA_APROBACION
+        : estadoDePromedio(promedio) === 'Aprobado'
           ? 'Regular'
           : 'Libre';
 
@@ -352,17 +347,100 @@ async function recargarTodo() {
   await renderResumen();
   renderBusqueda();
 
+  // Se recuerda lo elegido en "Cargar nota" para cargar la siguiente más rápido.
+  const previos = ['#curso-nota', '#alumno-nota', '#materia-nota'].map(
+    (sel) => document.querySelector(sel)?.value ?? ''
+  );
+
   formularios.forEach(refrescarFormulario);
+
+  const [prevCurso, prevAlumno, prevMateria] = previos;
+  const selCursoNota = document.querySelector('#curso-nota');
+
+  if (prevCurso && selCursoNota && [...selCursoNota.options].some((o) => o.value === prevCurso)) {
+    selCursoNota.value = prevCurso;
+    actualizarDependientes(formularios[0]);
+    document.querySelector('#alumno-nota').value = prevAlumno;
+    document.querySelector('#materia-nota').value = prevMateria;
+  }
+
+  actualizarInfoNota();
+  refrescarFiltrosNotas();
+  renderNotasCargadas();
 
   const fecha = document.querySelector('#fecha-asistencia');
   if (fecha) fecha.value = fechaLocalISO();
 }
 
+// --------- Bimestres (selects) ---------
+function poblarBimestres(selector) {
+  const select = document.querySelector(selector);
+
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  for (let numero = 1; numero <= 4; numero += 1) {
+    const option = document.createElement('option');
+    option.value = numero;
+    option.textContent =
+      etiquetaBimestre(numero, ANIO) + (numero === BIMESTRE_ACTUAL ? ' - actual' : '');
+    select.appendChild(option);
+  }
+
+  select.value = BIMESTRE_ACTUAL;
+}
+
+function notasDe(dniAlumno, idMateria, bimestre) {
+  return notasDeAlumnos
+    .filter(
+      (n) =>
+        n.dni_alumno === dniAlumno &&
+        n.id_materia === idMateria &&
+        n.bimestre === bimestre &&
+        String(n.fecha).startsWith(String(ANIO))
+    )
+    .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)) || a.id - b.id);
+}
+
 // --------- Cargar nota (INSERT en Supabase) ---------
+function actualizarInfoNota() {
+  const info = document.querySelector('#info-notas-cargadas');
+
+  if (!info) return;
+
+  const alumno = Number(document.querySelector('#alumno-nota')?.value);
+  const materia = Number(document.querySelector('#materia-nota')?.value);
+  const bimestre = Number(document.querySelector('#bimestre-nota')?.value);
+
+  if (!alumno || !materia || !bimestre) {
+    info.textContent = 'Elegí alumno, materia y bimestre para ver las notas ya cargadas.';
+    return;
+  }
+
+  const cargadas = notasDe(alumno, materia, bimestre);
+  const restantes = NOTAS_POR_BIMESTRE - cargadas.length;
+
+  if (cargadas.length === 0) {
+    info.textContent = `Todavía no tiene notas en este bimestre (se pueden cargar ${NOTAS_POR_BIMESTRE}).`;
+  } else if (restantes <= 0) {
+    info.textContent = `Notas cargadas: ${cargadas.map((n) => n.nota).join(', ')}. Ya tiene las ${NOTAS_POR_BIMESTRE} notas del bimestre.`;
+  } else {
+    info.textContent = `Notas cargadas: ${cargadas.map((n) => n.nota).join(', ')}. Faltan ${restantes}.`;
+  }
+}
+
 function configurarFormularioNota() {
   const form = document.querySelector('#cargar-nota-form');
 
   if (!form) return;
+
+  poblarBimestres('#bimestre-nota');
+
+  ['#alumno-nota', '#materia-nota', '#bimestre-nota'].forEach((selector) => {
+    const campo = document.querySelector(selector);
+    if (campo) campo.addEventListener('change', actualizarInfoNota);
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -370,10 +448,11 @@ function configurarFormularioNota() {
     const curso = document.querySelector('#curso-nota').value;
     const alumno = document.querySelector('#alumno-nota').value;
     const materia = document.querySelector('#materia-nota').value;
+    const bimestre = document.querySelector('#bimestre-nota').value;
     const nota = document.querySelector('#nota').value;
 
-    if (!curso || !alumno || !materia || nota === '') {
-      alert('Debe completar curso, alumno, materia y nota.');
+    if (!curso || !alumno || !materia || !bimestre || nota === '') {
+      alert('Debe completar curso, alumno, materia, bimestre y nota.');
       return;
     }
 
@@ -384,11 +463,33 @@ function configurarFormularioNota() {
       return;
     }
 
+    // Se consulta la base (no la memoria) para no pasarse de 3 notas.
+    const { count, error: errorConteo } = await supabase
+      .from('notas')
+      .select('*', { count: 'exact', head: true })
+      .eq('dni_alumno', Number(alumno))
+      .eq('id_materia', Number(materia))
+      .eq('bimestre', Number(bimestre))
+      .gte('fecha', `${ANIO}-01-01`)
+      .lte('fecha', `${ANIO}-12-31`);
+
+    if (errorConteo) {
+      console.error('Error al contar las notas del bimestre:', errorConteo);
+      alert('No se pudo verificar las notas del bimestre. Revisá la consola.');
+      return;
+    }
+
+    if ((count ?? 0) >= NOTAS_POR_BIMESTRE) {
+      alert(`Este alumno ya tiene las ${NOTAS_POR_BIMESTRE} notas de este bimestre en esa materia.`);
+      return;
+    }
+
     const nuevaNota = {
       dni_alumno: Number(alumno),
       dni_docente: DNI_DOCENTE,
       id_materia: Number(materia),
       nota: valorNota,
+      bimestre: Number(bimestre),
       fecha: fechaLocalISO()
     };
 
@@ -396,14 +497,182 @@ function configurarFormularioNota() {
 
     if (error) {
       console.error('Error al guardar la nota:', error);
-      alert('Ocurrió un error al guardar la nota. Revisá la consola.');
+      alert(
+        String(error.message || '').includes('ya tiene 3 notas')
+          ? 'Este alumno ya tiene las 3 notas de este bimestre en esa materia.'
+          : 'Ocurrió un error al guardar la nota. Revisá la consola.'
+      );
       return;
     }
 
     alert('Nota guardada correctamente.');
-    form.reset();
+
+    // Se mantienen curso, materia y bimestre para cargar la siguiente nota más rápido.
+    document.querySelector('#nota').value = '';
     await recargarTodo();
   });
+}
+
+// --------- Notas cargadas (ver, promediar, editar, eliminar) ---------
+function actualizarFiltrosNotas() {
+  const selCurso = document.querySelector('#filtro-curso');
+  const selMateria = document.querySelector('#filtro-materia');
+
+  if (!selCurso || !selMateria) return;
+
+  const idCurso = Number(selCurso.value);
+  const materiasCurso = idCurso ? dictados.filter((d) => d.id_curso === idCurso) : [];
+
+  poblarSelect(
+    selMateria,
+    materiasCurso.map((d) => ({ valor: d.id_materia, texto: d.materia?.nombre })),
+    idCurso ? 'Seleccione una materia' : 'Primero elija un curso'
+  );
+
+  if (materiasCurso.length === 1) {
+    selMateria.value = materiasCurso[0].id_materia;
+  }
+}
+
+function refrescarFiltrosNotas() {
+  const selCurso = document.querySelector('#filtro-curso');
+
+  if (!selCurso) return;
+
+  const anterior = selCurso.value;
+
+  poblarSelect(
+    selCurso,
+    [...mapaDeCursos()].map(([id, nombre]) => ({ valor: id, texto: nombre })),
+    'Seleccione un curso'
+  );
+
+  const materiaAnterior = document.querySelector('#filtro-materia')?.value;
+
+  if (anterior && [...selCurso.options].some((o) => o.value === anterior)) {
+    selCurso.value = anterior;
+  }
+
+  actualizarFiltrosNotas();
+
+  const selMateria = document.querySelector('#filtro-materia');
+
+  if (materiaAnterior && selMateria && [...selMateria.options].some((o) => o.value === materiaAnterior)) {
+    selMateria.value = materiaAnterior;
+  }
+}
+
+function renderNotasCargadas() {
+  const tbodyProm = document.querySelector('#promedios-table tbody');
+  const tbodyDetalle = document.querySelector('#detalle-notas-table tbody');
+  const resumen = document.querySelector('#notas-resumen');
+
+  if (!tbodyProm || !tbodyDetalle) return;
+
+  tbodyProm.innerHTML = '';
+  tbodyDetalle.innerHTML = '';
+
+  const idCurso = Number(document.querySelector('#filtro-curso')?.value);
+  const idMateria = Number(document.querySelector('#filtro-materia')?.value);
+  const bimestre = Number(document.querySelector('#filtro-bimestre')?.value);
+
+  if (!idCurso || !idMateria || !bimestre) {
+    if (resumen) resumen.textContent = 'Elegí curso, materia y bimestre para ver las notas.';
+    tbodyProm.innerHTML = '<tr><td colspan="6">Sin datos para mostrar.</td></tr>';
+    tbodyDetalle.innerHTML = '<tr><td colspan="4">Sin datos para mostrar.</td></tr>';
+    return;
+  }
+
+  const alumnosCurso = alumnos.filter((a) => a.id_curso === idCurso);
+
+  if (resumen) {
+    resumen.textContent = `${etiquetaBimestre(bimestre, ANIO)}. Máximo ${NOTAS_POR_BIMESTRE} notas por alumno. 6 o más: Aprobado.`;
+  }
+
+  if (alumnosCurso.length === 0) {
+    tbodyProm.innerHTML = '<tr><td colspan="6">El curso no tiene alumnos.</td></tr>';
+    tbodyDetalle.innerHTML = '<tr><td colspan="4">Sin notas.</td></tr>';
+    return;
+  }
+
+  let hayDetalle = false;
+
+  alumnosCurso.forEach((a) => {
+    const notas = notasDe(a.dni, idMateria, bimestre);
+    const valor = promediar(notas.map((n) => n.nota));
+    const celdas = [`${a.apellido}, ${a.nombre}`];
+
+    for (let i = 0; i < NOTAS_POR_BIMESTRE; i += 1) {
+      celdas.push(notas[i] ? notas[i].nota : '-');
+    }
+
+    celdas.push(valor === null ? '-' : valor.toFixed(2));
+    celdas.push(estadoDePromedio(valor));
+    tbodyProm.appendChild(crearFilaTabla(celdas));
+
+    notas.forEach((n) => {
+      hayDetalle = true;
+
+      const fila = crearFilaTabla([`${a.apellido}, ${a.nombre}`, n.nota, n.fecha]);
+      const celdaAcciones = document.createElement('td');
+
+      const editar = document.createElement('button');
+      editar.type = 'button';
+      editar.textContent = 'Editar';
+      editar.addEventListener('click', () => editarNota(n));
+
+      const eliminar = document.createElement('button');
+      eliminar.type = 'button';
+      eliminar.textContent = 'Eliminar';
+      eliminar.style.marginLeft = '6px';
+      eliminar.addEventListener('click', () => eliminarNota(n, a));
+
+      celdaAcciones.append(editar, eliminar);
+      fila.appendChild(celdaAcciones);
+      tbodyDetalle.appendChild(fila);
+    });
+  });
+
+  if (!hayDetalle) {
+    tbodyDetalle.innerHTML = '<tr><td colspan="4">Todavía no hay notas cargadas en este bimestre.</td></tr>';
+  }
+}
+
+async function editarNota(nota) {
+  const respuesta = prompt('Nueva nota (0 a 10):', nota.nota);
+
+  if (respuesta === null) return;
+
+  const valor = Number(String(respuesta).replace(',', '.'));
+
+  if (respuesta.trim() === '' || Number.isNaN(valor) || valor < 0 || valor > 10) {
+    alert('La nota debe estar entre 0 y 10.');
+    return;
+  }
+
+  const { error } = await supabase.from('notas').update({ nota: valor }).eq('id', nota.id);
+
+  if (error) {
+    console.error('Error al editar la nota:', error);
+    alert('No se pudo editar la nota. Revisá la consola.');
+    return;
+  }
+
+  await recargarTodo();
+}
+
+async function eliminarNota(nota, alumno) {
+  if (!confirm(`¿Eliminar la nota ${nota.nota} de ${alumno.apellido}, ${alumno.nombre}?`)) return;
+
+  const { error } = await supabase.from('notas').delete().eq('id', nota.id);
+
+  if (error) {
+    console.error('Error al eliminar la nota:', error);
+    alert('No se pudo eliminar la nota. Revisá la consola.');
+    return;
+  }
+
+  await recargarTodo();
 }
 
 // --------- Registrar asistencia (INSERT en Supabase) ---------
@@ -468,6 +737,20 @@ function configurarEventos() {
     }
   });
 
+  const filtroCurso = document.querySelector('#filtro-curso');
+
+  if (filtroCurso) {
+    filtroCurso.addEventListener('change', () => {
+      actualizarFiltrosNotas();
+      renderNotasCargadas();
+    });
+  }
+
+  ['#filtro-materia', '#filtro-bimestre'].forEach((selector) => {
+    const campo = document.querySelector(selector);
+    if (campo) campo.addEventListener('change', renderNotasCargadas);
+  });
+
   const logout = document.querySelector('#logout-button');
 
   if (logout) {
@@ -487,6 +770,7 @@ function configurarEventos() {
 
 // --------- Inicio ---------
 async function inicializarDocentePanel() {
+  poblarBimestres('#filtro-bimestre');
   configurarEventos();
   configurarFormularioNota();
   configurarFormularioAsistencia();

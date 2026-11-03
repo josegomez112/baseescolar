@@ -72,17 +72,47 @@
 
         <section class="data-section" id="mis-notas-section">
           <h3>Mis Notas</h3>
+          <form class="panel-form" id="bimestre-form" autocomplete="off">
+            <div class="form-group">
+              <label for="bimestre-select">Bimestre</label>
+              <select id="bimestre-select" name="bimestre-select"></select>
+            </div>
+          </form>
+
+          <p id="bimestre-info">-</p>
+
           <table class="data-table" id="mis-notas-table">
             <thead>
               <tr>
                 <th>Materia</th>
-                <th>Nota</th>
-                <th>Fecha</th>
+                <th>Nota 1</th>
+                <th>Nota 2</th>
+                <th>Nota 3</th>
+                <th>Promedio</th>
+                <th>Estado</th>
               </tr>
             </thead>
             <tbody id="notasBody">
               <tr>
-                <td colspan="3">Cargando...</td>
+                <td colspan="6">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Resumen del año</h3>
+          <table class="data-table" id="resumen-anio-table">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>1° Bimestre</th>
+                <th>2° Bimestre</th>
+                <th>3° Bimestre</th>
+                <th>4° Bimestre</th>
+              </tr>
+            </thead>
+            <tbody id="resumenAnioBody">
+              <tr>
+                <td colspan="5">Cargando...</td>
               </tr>
             </tbody>
           </table>
@@ -90,16 +120,53 @@
 
         <section class="data-section" id="mis-asistencias-section">
           <h3>Mis Asistencias</h3>
+          <form class="panel-form" id="asistencia-filtro-form" autocomplete="off">
+            <div class="form-group">
+              <label for="asistencia-bimestre">Bimestre</label>
+              <select id="asistencia-bimestre" name="asistencia-bimestre"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="asistencia-fecha">Fecha (opcional)</label>
+              <input type="date" id="asistencia-fecha" name="asistencia-fecha" />
+            </div>
+
+          </form>
+
+          <div id="asistencia-resumen"></div>
+
           <table class="data-table" id="mis-asistencias-table">
             <thead>
               <tr>
                 <th>Fecha</th>
                 <th>Estado</th>
+                <th>Justificada</th>
+                <th>Motivo</th>
               </tr>
             </thead>
             <tbody id="asistenciasBody">
               <tr>
-                <td colspan="2">Cargando...</td>
+                <td colspan="4">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Resumen del año</h3>
+          <table class="data-table" id="resumen-asistencias-table">
+            <thead>
+              <tr>
+                <th>Bimestre</th>
+                <th>Presentes</th>
+                <th>Tardes</th>
+                <th>Faltas</th>
+                <th>Justificadas</th>
+                <th>Sin justificar</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="resumenAsistenciasBody">
+              <tr>
+                <td colspan="7">Cargando...</td>
               </tr>
             </tbody>
           </table>

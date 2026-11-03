@@ -133,6 +133,7 @@
           </form>
 
           <p id="control-resumen">Seleccioná un curso y una fecha para ver la asistencia.</p>
+          <div id="control-cuadro"></div>
 
           <table class="data-table" id="control-asistencia-table">
             <thead>
@@ -143,6 +144,43 @@
                 <th>Curso</th>
                 <th>Estado</th>
                 <th>Fecha</th>
+                <th>Justificación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="faltas-section">
+          <h3>Faltas por bimestre</h3>
+          <form class="panel-form" id="faltas-form" autocomplete="off">
+            <div class="form-group">
+              <label for="faltas-curso">Curso</label>
+              <select id="faltas-curso" name="faltas-curso">
+                <option value="">Seleccione un curso</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="faltas-bimestre">Bimestre</label>
+              <select id="faltas-bimestre" name="faltas-bimestre"></select>
+            </div>
+          </form>
+
+          <p id="faltas-resumen">Seleccioná un curso y un bimestre.</p>
+          <div id="faltas-cuadro"></div>
+
+          <table class="data-table" id="faltas-table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Presentes</th>
+                <th>Tardes</th>
+                <th>Faltas</th>
+                <th>Justificadas</th>
+                <th>Sin justificar</th>
+                <th>Estado</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -222,6 +260,7 @@
           { id: 'alumnos', texto: 'Alumnos', secciones: ['buscar-alumno-section'], descripcion: 'Buscá alumnos de tus cursos' },
           { id: 'docentes', texto: 'Docentes', secciones: ['buscar-docente-section'], descripcion: 'Docentes de tus cursos' },
           { id: 'control', texto: 'Control de asistencia', secciones: ['control-asistencia-section'], descripcion: 'Asistencia por curso y fecha' },
+          { id: 'faltas', texto: 'Faltas por bimestre', secciones: ['faltas-section'], descripcion: 'Quién está por quedar no regular' },
           { id: 'registrar', texto: 'Registrar asistencia', secciones: ['registrar-asistencia-section'], descripcion: 'Cargá o corregí asistencias' },
           { id: 'perfil', texto: 'Mi perfil', secciones: ['profile-section'], rapido: false },
           { id: 'salir', texto: 'Cerrar sesión', accion: 'salir' }

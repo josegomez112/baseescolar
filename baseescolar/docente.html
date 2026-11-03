@@ -130,12 +130,71 @@
             </div>
 
             <div class="form-group">
+              <label for="bimestre-nota">Bimestre</label>
+              <select id="bimestre-nota" name="bimestre-nota"></select>
+            </div>
+
+            <div class="form-group">
               <label for="nota">Nota</label>
               <input type="number" id="nota" name="nota" min="0" max="10" step="0.1" />
             </div>
 
             <button type="submit">Guardar</button>
           </form>
+
+          <p id="info-notas-cargadas">Elegí alumno, materia y bimestre para ver las notas ya cargadas.</p>
+        </section>
+
+        <section class="data-section" id="notas-cargadas-section">
+          <h3>Notas cargadas</h3>
+          <form class="panel-form" id="filtro-notas-form" autocomplete="off">
+            <div class="form-group">
+              <label for="filtro-curso">Curso</label>
+              <select id="filtro-curso" name="filtro-curso">
+                <option value="">Seleccione un curso</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="filtro-materia">Materia</label>
+              <select id="filtro-materia" name="filtro-materia">
+                <option value="">Primero elija un curso</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="filtro-bimestre">Bimestre</label>
+              <select id="filtro-bimestre" name="filtro-bimestre"></select>
+            </div>
+          </form>
+
+          <p id="notas-resumen">Elegí curso, materia y bimestre para ver las notas.</p>
+
+          <table class="data-table" id="promedios-table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Nota 1</th>
+                <th>Nota 2</th>
+                <th>Nota 3</th>
+                <th>Promedio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <table class="data-table" id="detalle-notas-table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Nota</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </section>
 
         <section class="form-section" id="registrar-asistencia-section">
@@ -207,6 +266,7 @@
           { id: 'cursos', texto: 'Mis cursos', secciones: ['mis-materias-section'], descripcion: 'Materias, cursos y cantidad de alumnos' },
           { id: 'alumnos', texto: 'Buscar alumno', secciones: ['buscar-alumno-section'], descripcion: 'Buscá por DNI, nombre o apellido' },
           { id: 'notas', texto: 'Cargar notas', secciones: ['cargar-nota-section'], descripcion: 'Cargá notas a tus alumnos' },
+          { id: 'notas-cargadas', texto: 'Notas cargadas', secciones: ['notas-cargadas-section'], descripcion: 'Promedios por bimestre, editar y eliminar' },
           { id: 'asistencia', texto: 'Asistencia', secciones: ['registrar-asistencia-section'], descripcion: 'Registrá la asistencia del día' },
           { id: 'perfil', texto: 'Mi perfil', secciones: ['profile-section'], rapido: false },
           { id: 'salir', texto: 'Cerrar sesión', accion: 'salir' }

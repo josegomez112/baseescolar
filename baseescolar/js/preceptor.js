@@ -1,4 +1,22 @@
 import { supabase } from './supabase.js';
+import {
+  FALTAS_MAXIMAS_POR_BIMESTRE,
+  fechaLocalISO,
+  bimestreActual,
+  calendarioBimestres,
+  etiquetaBimestre,
+  asistenciasDelBimestre,
+  resumenAsistencias,
+  estadoPorFaltas,
+  mostrarMotivo,
+  botonSuave,
+  botonPrincipal,
+  crearVentana,
+  crearCuadroResumen
+} from './bimestres.js';
+
+const ANIO = new Date().getFullYear();
+const BIMESTRE_ACTUAL = bimestreActual();
 
 // DNI del preceptor que inició sesión. Si el login no guardó ninguno,
 // se usa el preceptor de prueba.
@@ -22,15 +40,6 @@ let tokenControl = 0;
 // =====================================================
 // UTILIDADES
 // =====================================================
-
-// Fecha local YYYY-MM-DD (toISOString usa UTC y después de las 21:00
-// en Argentina devolvería el día siguiente).
-function fechaLocalISO(fecha = new Date()) {
-  const anio = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
-  return `${anio}-${mes}-${dia}`;
-}
 
 function normalizar(texto) {
   return String(texto ?? '')
@@ -132,11 +141,11 @@ function nombreCurso(idCurso) {
 }
 
 // Trae las asistencias de unos cursos en una fecha y deja el último
-// estado registrado de cada alumno (dni -> estado).
+// registro de cada alumno (dni -> { id, estado, justificada, motivo }).
 async function estadosPorAlumno(idsCursos, fecha) {
   const { data, error } = await supabase
     .from('asistencia')
-    .select('id, dni_alumno, estado')
+    .select('id, dni_alumno, estado, justificada, motivo')
     .in('id_curso', idsCursos)
     .eq('fecha', fecha)
     .order('id', { ascending: true });
@@ -148,7 +157,7 @@ async function estadosPorAlumno(idsCursos, fecha) {
 
   const estados = new Map();
 
-  (data || []).forEach((registro) => estados.set(registro.dni_alumno, registro.estado));
+  (data || []).forEach((registro) => estados.set(registro.dni_alumno, registro));
 
   return estados;
 }
@@ -245,13 +254,30 @@ async function cargarDatos() {
 async function renderResumen() {
   setTexto('#totalAlumnosPreceptor', alumnos.length);
 
-  // "Justificaciones" todavía no existe en la base de datos.
-  setTexto('#justificacionesPreceptor', '-');
-
   if (cursos.length === 0) {
     setTexto('#presentesHoyPreceptor', 0);
     setTexto('#ausentesHoyPreceptor', 0);
+    setTexto('#justificacionesPreceptor', 0);
     return;
+  }
+
+  // Justificaciones pendientes: faltas sin justificar del bimestre actual.
+  const bimestre = calendarioBimestres(ANIO)[BIMESTRE_ACTUAL - 1];
+
+  const { count, error: errorPendientes } = await supabase
+    .from('asistencia')
+    .select('*', { count: 'exact', head: true })
+    .in('id_curso', cursos.map((c) => c.id))
+    .eq('estado', 'Ausente')
+    .eq('justificada', false)
+    .gte('fecha', bimestre.inicio)
+    .lte('fecha', bimestre.fin);
+
+  if (errorPendientes) {
+    console.error('Error al contar faltas sin justificar:', errorPendientes);
+    setTexto('#justificacionesPreceptor', '-');
+  } else {
+    setTexto('#justificacionesPreceptor', count ?? 0);
   }
 
   const estados = await estadosPorAlumno(cursos.map((c) => c.id), fechaLocalISO());
@@ -262,7 +288,7 @@ async function renderResumen() {
     return;
   }
 
-  const valores = [...estados.values()];
+  const valores = [...estados.values()].map((r) => r.estado);
 
   setTexto('#presentesHoyPreceptor', valores.filter((e) => e === 'Presente').length);
   setTexto('#ausentesHoyPreceptor', valores.filter((e) => e === 'Ausente').length);
@@ -349,8 +375,12 @@ async function renderControl() {
 
   const token = ++tokenControl;
 
+  const cuadroControl = document.querySelector('#control-cuadro');
+
   if (!idCurso || !fecha) {
     tbody.innerHTML = '';
+    cuadroControl.innerHTML = '';
+    cuadroControl.className = '';
     setTexto('#control-resumen', 'Seleccioná un curso y una fecha para ver la asistencia.');
     return;
   }
@@ -360,6 +390,8 @@ async function renderControl() {
   if (token !== tokenControl) return;
 
   if (!estados) {
+    cuadroControl.innerHTML = '';
+    cuadroControl.className = '';
     setTexto('#control-resumen', 'No se pudo cargar la asistencia.');
     return;
   }
@@ -369,7 +401,9 @@ async function renderControl() {
   tbody.innerHTML = '';
 
   if (alumnosCurso.length === 0) {
-    filaMensaje(tbody, 6, 'Este curso todavía no tiene alumnos.');
+    filaMensaje(tbody, 8, 'Este curso todavía no tiene alumnos.');
+    cuadroControl.innerHTML = '';
+    cuadroControl.className = '';
     setTexto('#control-resumen', `${nombreCurso(idCurso)}: sin alumnos.`);
     return;
   }
@@ -377,19 +411,278 @@ async function renderControl() {
   const conteo = { Presente: 0, Ausente: 0, Tarde: 0, 'Sin registrar': 0 };
 
   alumnosCurso.forEach((a) => {
-    const estado = estados.get(a.dni) || 'Sin registrar';
+    const registro = estados.get(a.dni);
+    const estado = registro?.estado || 'Sin registrar';
 
     conteo[estado] = (conteo[estado] || 0) + 1;
 
+    const justificacion =
+      estado !== 'Ausente' ? '-' : registro.justificada ? 'Justificada' : 'Sin justificar';
+
+    const fila = crearFilaTabla([a.dni, a.nombre, a.apellido, nombreCurso(idCurso), estado, fecha, justificacion]);
+    const celdaAcciones = document.createElement('td');
+
+    if (estado === 'Ausente') {
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.textContent = registro.justificada ? 'Quitar justificación' : 'Justificar';
+      boton.addEventListener('click', () => cambiarJustificacion(registro, a));
+
+      if (registro.justificada) {
+        const ver = botonSuave('Ver motivo', () =>
+          mostrarMotivo(`Motivo de la falta de ${a.nombre} ${a.apellido}`, registro.motivo)
+        );
+        ver.style.marginRight = '6px';
+        celdaAcciones.appendChild(ver);
+      }
+
+      celdaAcciones.appendChild(boton);
+    } else {
+      celdaAcciones.textContent = '-';
+    }
+
+    fila.appendChild(celdaAcciones);
+    tbody.appendChild(fila);
+  });
+
+  setTexto('#control-resumen', `${nombreCurso(idCurso)} - ${fecha}`);
+
+  const justificadas = [...estados.values()].filter(
+    (r) => r.estado === 'Ausente' && r.justificada
+  ).length;
+
+  const sinRegistrar = conteo['Sin registrar'];
+
+  crearCuadroResumen(
+    document.querySelector('#control-cuadro'),
+    [
+      ['Presentes', conteo.Presente],
+      ['Ausentes', conteo.Ausente],
+      ['Tardes', conteo.Tarde],
+      ['Justificadas', justificadas],
+      ['Sin registrar', sinRegistrar]
+    ],
+    sinRegistrar > 0
+      ? `Faltan registrar ${sinRegistrar} alumno(s) en esta fecha`
+      : 'Asistencia completa en esta fecha',
+    sinRegistrar > 0 ? 'aviso' : 'ok'
+  );
+}
+
+const MOTIVOS_FRECUENTES = [
+  'Enfermedad (certificado médico)',
+  'Turno médico o trámite',
+  'Problema familiar'
+];
+
+// Ventana para elegir el motivo de una falta. Devuelve el texto del motivo
+// o null si se cancela.
+function pedirMotivo(nombreAlumno) {
+  return new Promise((resolve) => {
+    const { dialogo, cuerpo, pie } = crearVentana(`Justificar falta de ${nombreAlumno}`);
+
+    const form = document.createElement('form');
+    form.method = 'dialog';
+
+    [...MOTIVOS_FRECUENTES, 'Otro'].forEach((texto, indice) => {
+      const etiqueta = document.createElement('label');
+      etiqueta.className = 'opcion';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'motivo';
+      radio.value = texto;
+      radio.checked = indice === 0;
+
+      etiqueta.append(radio, document.createTextNode(texto));
+      form.appendChild(etiqueta);
+    });
+
+    const nota = document.createElement('input');
+    nota.type = 'text';
+    nota.maxLength = 100;
+    nota.placeholder = 'Escribí una nota breve del motivo';
+    nota.style.display = 'none';
+    form.appendChild(nota);
+
+    const error = document.createElement('p');
+    error.className = 'dlg-error';
+    form.appendChild(error);
+
+    form.addEventListener('change', () => {
+      const esOtro = form.elements.motivo.value === 'Otro';
+      nota.style.display = esOtro ? 'block' : 'none';
+      if (esOtro) nota.focus();
+    });
+
+    const cancelar = document.createElement('button');
+    cancelar.type = 'button';
+    cancelar.className = 'btn-suave';
+    cancelar.textContent = 'Cancelar';
+    cancelar.addEventListener('click', () => dialogo.close());
+
+    const guardar = botonPrincipal('Justificar', 'submit');
+    guardar.setAttribute('form', 'form-motivo');
+    form.id = 'form-motivo';
+
+    pie.append(cancelar, guardar);
+    cuerpo.appendChild(form);
+
+    let resultado = null;
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const elegido = form.elements.motivo.value;
+
+      if (elegido === 'Otro') {
+        const texto = nota.value.trim();
+
+        if (!texto) {
+          error.textContent = 'Escribí una nota breve del motivo.';
+          return;
+        }
+
+        resultado = `Otro: ${texto}`;
+      } else {
+        resultado = elegido;
+      }
+
+      dialogo.close();
+    });
+
+    dialogo.addEventListener('close', () => resolve(resultado));
+
+    document.body.appendChild(dialogo);
+    dialogo.showModal();
+  });
+}
+
+async function cambiarJustificacion(registro, alumno) {
+  const nombre = `${alumno.nombre} ${alumno.apellido}`;
+  let cambios;
+
+  if (registro.justificada) {
+    if (!confirm(`¿Quitar la justificación de la falta de ${nombre}?`)) return;
+    cambios = { justificada: false, motivo: null };
+  } else {
+    const motivo = await pedirMotivo(nombre);
+
+    if (motivo === null) return;
+
+    cambios = { justificada: true, motivo };
+  }
+
+  const { error } = await supabase.from('asistencia').update(cambios).eq('id', registro.id);
+
+  if (error) {
+    console.error('Error al cambiar la justificación:', error);
+    mostrarMensaje('No se pudo cambiar la justificación. Revisá la consola.', 'error');
+    return;
+  }
+
+  mostrarMensaje(
+    cambios.justificada ? `Falta de ${nombre} justificada.` : `Se quitó la justificación de ${nombre}.`
+  );
+
+  await renderResumen();
+  await renderControl();
+  await renderFaltas();
+}
+
+// =====================================================
+// FALTAS POR BIMESTRE (por curso)
+// =====================================================
+
+let tokenFaltas = 0;
+
+async function renderFaltas() {
+  const idCurso = Number(document.querySelector('#faltas-curso')?.value);
+  const bimestre = Number(document.querySelector('#faltas-bimestre')?.value);
+  const tbody = document.querySelector('#faltas-table tbody');
+
+  if (!tbody) return;
+
+  const token = ++tokenFaltas;
+
+  const cuadroFaltas = document.querySelector('#faltas-cuadro');
+
+  cuadroFaltas.innerHTML = '';
+  cuadroFaltas.className = '';
+
+  if (!idCurso || !bimestre) {
+    tbody.innerHTML = '';
+    setTexto('#faltas-resumen', 'Seleccioná un curso y un bimestre.');
+    return;
+  }
+
+  const inicio = calendarioBimestres(ANIO)[0].inicio;
+
+  const { data, error } = await supabase
+    .from('asistencia')
+    .select('id, dni_alumno, fecha, estado, justificada')
+    .eq('id_curso', idCurso)
+    .gte('fecha', inicio)
+    .lte('fecha', `${ANIO}-12-31`);
+
+  if (token !== tokenFaltas) return;
+
+  if (error) {
+    console.error('Error al buscar las faltas:', error);
+    setTexto('#faltas-resumen', 'No se pudieron cargar las faltas.');
+    return;
+  }
+
+  const alumnosCurso = alumnos.filter((a) => a.id_curso === idCurso);
+
+  tbody.innerHTML = '';
+
+  setTexto('#faltas-resumen', `${nombreCurso(idCurso)} - ${etiquetaBimestre(bimestre, ANIO)}`);
+
+  if (alumnosCurso.length === 0) {
+    filaMensaje(tbody, 7, 'Este curso todavía no tiene alumnos.');
+    return;
+  }
+
+  const total = { presentes: 0, tardes: 0, faltas: 0, justificadas: 0, injustificadas: 0 };
+  const noRegulares = [];
+
+  alumnosCurso.forEach((a) => {
+    const propias = (data || []).filter((r) => r.dni_alumno === a.dni);
+    const resumen = resumenAsistencias(asistenciasDelBimestre(propias, bimestre, ANIO));
+
+    Object.keys(total).forEach((clave) => {
+      total[clave] += resumen[clave];
+    });
+
+    if (!resumen.regular) noRegulares.push(`${a.apellido}, ${a.nombre}`);
+
     tbody.appendChild(
-      crearFilaTabla([a.dni, a.nombre, a.apellido, nombreCurso(idCurso), estado, fecha])
+      crearFilaTabla([
+        `${a.apellido}, ${a.nombre}`,
+        resumen.presentes,
+        resumen.tardes,
+        resumen.faltas,
+        resumen.justificadas,
+        resumen.injustificadas,
+        estadoPorFaltas(resumen)
+      ])
     );
   });
 
-  setTexto(
-    '#control-resumen',
-    `${nombreCurso(idCurso)} - ${fecha}: ${conteo.Presente} presente(s), ${conteo.Ausente} ausente(s), ` +
-      `${conteo.Tarde} tarde(s), ${conteo['Sin registrar']} sin registrar.`
+  crearCuadroResumen(
+    cuadroFaltas,
+    [
+      ['Presentes', total.presentes],
+      ['Tardes', total.tardes],
+      ['Faltas', total.faltas],
+      ['Justificadas', total.justificadas],
+      ['Sin justificar', total.injustificadas]
+    ],
+    noRegulares.length > 0
+      ? `No regulares en este bimestre (${noRegulares.length}): ${noRegulares.join(' · ')}`
+      : 'Todos los alumnos del curso siguen regulares en este bimestre',
+    noRegulares.length > 0 ? 'error' : 'ok'
   );
 }
 
@@ -423,6 +716,15 @@ function refrescarSelectsCursos() {
   }
 
   poblarSelect(document.querySelector('#curso-asistencia'), opciones, 'Seleccione un curso');
+
+  const faltasCurso = document.querySelector('#faltas-curso');
+  const previoFaltas = faltasCurso.value;
+
+  poblarSelect(faltasCurso, opciones, 'Seleccione un curso');
+
+  if ([...faltasCurso.options].some((o) => o.value === previoFaltas)) {
+    faltasCurso.value = previoFaltas;
+  }
   actualizarAlumnosFormulario();
 }
 
@@ -477,7 +779,7 @@ function configurarFormularioAsistencia() {
 
       const { error } = await supabase
         .from('asistencia')
-        .update({ estado, id_curso: Number(idCurso), dni_preceptor: DNI_PRECEPTOR })
+        .update({ estado, id_curso: Number(idCurso), dni_preceptor: DNI_PRECEPTOR, justificada: false, motivo: null })
         .eq('id', ultimo.id);
 
       if (error) {
@@ -513,6 +815,7 @@ function configurarFormularioAsistencia() {
 
     await renderResumen();
     await renderControl();
+    await renderFaltas();
   });
 }
 
@@ -527,6 +830,22 @@ function configurarEventos() {
   ['#buscar-alumno-form', '#buscar-docente-form', '#control-asistencia-form'].forEach((id) => {
     document.querySelector(id).addEventListener('submit', (event) => event.preventDefault());
   });
+
+  const faltasBimestre = document.querySelector('#faltas-bimestre');
+
+  for (let numero = 1; numero <= 4; numero += 1) {
+    const option = document.createElement('option');
+    option.value = numero;
+    option.textContent =
+      etiquetaBimestre(numero, ANIO) + (numero === BIMESTRE_ACTUAL ? ' - actual' : '');
+    faltasBimestre.appendChild(option);
+  }
+
+  faltasBimestre.value = BIMESTRE_ACTUAL;
+
+  document.querySelector('#faltas-curso').addEventListener('change', renderFaltas);
+  faltasBimestre.addEventListener('change', renderFaltas);
+  document.querySelector('#faltas-form').addEventListener('submit', (event) => event.preventDefault());
 
   document.querySelector('#control-curso').addEventListener('change', renderControl);
   document.querySelector('#control-fecha').addEventListener('change', renderControl);
@@ -566,6 +885,7 @@ async function inicializarPreceptorPanel() {
 
   await renderResumen();
   await renderControl();
+  await renderFaltas();
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPreceptorPanel);
