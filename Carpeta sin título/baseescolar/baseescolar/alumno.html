@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel del Alumno</title>
+    <meta
+      name="description"
+      content="Panel principal del alumno para el Sistema de Gestión Escolar"
+    />
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script type="module" src="js/alumno.js"></script>
+  </head>
+  <body>
+    <header class="site-header" id="site-header">
+      <h1 class="site-title">Sistema de Gestión Escolar</h1>
+      <p class="student-name" id="nombreHeader">Alumno: Cargando...</p>
+    </header>
+
+    <div class="layout" id="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav" aria-label="Menú principal del alumno">
+          <ul class="sidebar-menu"></ul>
+        </nav>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <section class="welcome-section" id="welcome-section">
+          <h2 class="welcome-title" id="bienvenida">Bienvenido/a, alumno</h2>
+          <p class="welcome-text">Esta es tu vista principal del sistema escolar.</p>
+        </section>
+
+        <section class="summary-section" id="summary-section" aria-label="Resumen del alumno">
+          <article class="summary-card" id="card-materias">
+            <h3>Cantidad de materias</h3>
+            <p id="cantidadMaterias">-</p>
+          </article>
+
+          <article class="summary-card" id="card-promedio">
+            <h3>Promedio general</h3>
+            <p id="promedioGeneral">-</p>
+          </article>
+
+          <article class="summary-card" id="card-asistencia">
+            <h3>Porcentaje de asistencia</h3>
+            <p id="porcentajeAsistencia">-</p>
+          </article>
+
+          <article class="summary-card" id="card-estado">
+            <h3>Estado académico</h3>
+            <p id="estadoAcademico">-</p>
+          </article>
+        </section>
+
+        <section class="data-section" id="mis-materias-section">
+          <h3>Mis Materias</h3>
+          <table class="data-table" id="mis-materias-table">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Docente</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="materiasBody">
+              <tr>
+                <td colspan="3">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="mis-notas-section">
+          <h3>Mis Notas</h3>
+          <form class="panel-form" id="bimestre-form" autocomplete="off">
+            <div class="form-group">
+              <label for="bimestre-select">Bimestre</label>
+              <select id="bimestre-select" name="bimestre-select"></select>
+            </div>
+          </form>
+
+          <p id="bimestre-info">-</p>
+
+          <table class="data-table" id="mis-notas-table">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Nota 1</th>
+                <th>Nota 2</th>
+                <th>Nota 3</th>
+                <th>Promedio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="notasBody">
+              <tr>
+                <td colspan="6">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Resumen del año</h3>
+          <table class="data-table" id="resumen-anio-table">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>1° Bimestre</th>
+                <th>2° Bimestre</th>
+                <th>3° Bimestre</th>
+                <th>4° Bimestre</th>
+              </tr>
+            </thead>
+            <tbody id="resumenAnioBody">
+              <tr>
+                <td colspan="5">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section" id="mis-asistencias-section">
+          <h3>Mis Asistencias</h3>
+          <form class="panel-form" id="asistencia-filtro-form" autocomplete="off">
+            <div class="form-group">
+              <label for="asistencia-bimestre">Bimestre</label>
+              <select id="asistencia-bimestre" name="asistencia-bimestre"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="asistencia-fecha">Fecha (opcional)</label>
+              <input type="date" id="asistencia-fecha" name="asistencia-fecha" />
+            </div>
+
+          </form>
+
+          <div id="asistencia-resumen"></div>
+
+          <table class="data-table" id="mis-asistencias-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Justificada</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="asistenciasBody">
+              <tr>
+                <td colspan="4">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Resumen del año</h3>
+          <table class="data-table" id="resumen-asistencias-table">
+            <thead>
+              <tr>
+                <th>Bimestre</th>
+                <th>Presentes</th>
+                <th>Tardes</th>
+                <th>Faltas</th>
+                <th>Justificadas</th>
+                <th>Sin justificar</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="resumenAsistenciasBody">
+              <tr>
+                <td colspan="7">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="profile-section" id="profile-section">
+          <h3>Mi Perfil</h3>
+          <dl class="profile-list">
+            <div>
+              <dt>DNI</dt>
+              <dd id="perfilDni">-</dd>
+            </div>
+            <div>
+              <dt>Nombre</dt>
+              <dd id="perfilNombre">-</dd>
+            </div>
+            <div>
+              <dt>Apellido</dt>
+              <dd id="perfilApellido">-</dd>
+            </div>
+            <div>
+              <dt>Curso</dt>
+              <dd id="perfilCurso">-</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer" id="site-footer">
+      <p>Proyecto Sistema de Gestión Escolar</p>
+    </footer>
+
+    <script type="module">
+      import { iniciarMenu } from './js/menu.js';
+
+      iniciarMenu({
+        rol: 'alumno',
+        items: [
+          { id: 'inicio', texto: 'Inicio', secciones: ['welcome-section', 'summary-section'] },
+          { id: 'materias', texto: 'Mis materias', secciones: ['mis-materias-section'], descripcion: 'Tus materias y sus docentes' },
+          { id: 'notas', texto: 'Mis notas', secciones: ['mis-notas-section'], descripcion: 'Tus notas y tu promedio' },
+          { id: 'asistencias', texto: 'Mis asistencias', secciones: ['mis-asistencias-section'], descripcion: 'Tu registro de asistencia' },
+          { id: 'perfil', texto: 'Mi perfil', secciones: ['profile-section'], rapido: false },
+          { id: 'salir', texto: 'Cerrar sesión', accion: 'salir' }
+        ]
+      });
+    </script>
+  </body>
+</html>
